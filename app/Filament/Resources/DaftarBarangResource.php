@@ -28,12 +28,12 @@ class DaftarBarangResource extends Resource
 
     public static function canEdit(Model $record): bool 
     {
-        return false;
+        return true;
     }
 
     public static function canDelete(Model $record): bool 
     {
-        return false;
+        return true;
     }
 
     public static function getEloquentQuery(): Builder
@@ -130,6 +130,7 @@ class DaftarBarangResource extends Resource
         return [
             'index' => DaftarBarangResource\Pages\ListDaftarBarangs::route('/'),
             'view' => DaftarBarangResource\Pages\ViewBarang::route('/{record}'),
+            'edit' => \App\Filament\Resources\BarangResource\Pages\EditBarang::route('/{record}/edit'),
         ];
     }
 }

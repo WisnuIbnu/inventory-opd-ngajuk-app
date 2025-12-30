@@ -207,7 +207,7 @@ public static function table(Table $table): Table
                     ->color('info')
                     ->action(function (Barang $record) {
                         $qrCodeSvg = QrCode::format('svg')
-                            ->size(200)
+                            ->size(25)
                             ->margin(1)
                             ->generate($record->barcode);
 
