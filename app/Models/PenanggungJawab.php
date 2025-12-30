@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PenanggungJawab extends Model
 {
@@ -13,5 +14,13 @@ class PenanggungJawab extends Model
 
     protected $fillable = ['nama', 'dinas_id'];
 
-    public function dinas(): BelongsTo { return $this->belongsTo(Dinas::class); }
+    public function dinas(): BelongsTo 
+    { 
+        return $this->belongsTo(Dinas::class); 
+    }
+
+    public function barangs(): HasMany
+    {
+        return $this->hasMany(Barang::class, 'penanggung_jawab_id');
+    }
 }

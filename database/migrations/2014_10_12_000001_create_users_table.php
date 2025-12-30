@@ -18,7 +18,7 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->enum('role', ['Admin', 'OPD'])->default('OPD');
-            $table->foreignId('dinas_id')->constrained('dinas')->cascadeOnDelete()->default(1);
+            $table->foreignId('dinas_id')->constrained('dinas')->cascadeOnDelete()->default(1)->restrictOnDelete();
             $table->rememberToken();
             $table->timestamps();
         });

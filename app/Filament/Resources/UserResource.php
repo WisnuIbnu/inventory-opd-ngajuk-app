@@ -7,8 +7,11 @@ use App\Filament\Resources\UserResource\RelationManagers;
 use App\Models\User;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Actions\DeleteAction;
+use Filament\Tables\Actions\DeleteBulkAction;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -64,10 +67,39 @@ class UserResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make()
+                ->before(function (DeleteAction $action, User $record) {
+                    $userCountInDinas = User::where('dinas_id', $record->dinas_id)->count();
+
+                    if ($userCountInDinas <= 1) {
+                        Notification::make()
+                            ->danger()
+                            ->title('Gagal Menghapus!')
+                            ->body('User tidak bisa dihapus karena Dinas "' . ($record->dinas->nama_opd ?? 'ini') . '" wajib memiliki minimal 1 User.')
+                            ->persistent()
+                            ->send();
+
+                        $action->halt();
+                    }
+                }),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                Tables\Actions\DeleteBulkAction::make()
+                    ->before(function (DeleteBulkAction $action, \Illuminate\Support\Collection $records) {
+                        foreach ($records as $record) {
+                            $userCountInDinas = User::where('dinas_id', $record->dinas_id)->count();
+                            if ($userCountInDinas <= 1) {
+                                Notification::make()
+                                    ->danger()
+                                    ->title('Hapus Massal Gagal!')
+                                    ->body("User '{$record->name}' adalah user terakhir di dinasnya. Minimal harus tersisa 1 User.")
+                                    ->send();
+
+                                $action->halt();
+                            }
+                        }
+                    }),
                 ]),
             ]);
     }

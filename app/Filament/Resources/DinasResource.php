@@ -7,6 +7,7 @@ use App\Filament\Resources\DinasResource\RelationManagers;
 use App\Models\Dinas;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -45,10 +46,45 @@ class DinasResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make()
+                    ->before(function (Tables\Actions\DeleteAction $action, Dinas $record) {
+                        $hasData = $record->users()->exists() || $record->barangs()->exists() || $record->gudangs()->exists() || $record->jenisBarangs()->exists() || $record->penanggungJawabs()->exists();
+
+                        if ($hasData) {
+                            Notification::make()
+                                ->danger()
+                                ->title('Gagal Menghapus Dinas!')
+                                ->body('Dinas ini tidak bisa dihapus karena masih memiliki data User, Barang, Gudang, atau Penanggung Jawab yang aktif.')
+                                ->persistent()
+                                ->send();
+
+                            $action->halt();
+                        }
+                    }),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\DeleteBulkAction::make()
+                    ->before(function (Tables\Actions\DeleteBulkAction $action, \Illuminate\Support\Collection $records) {
+                        foreach ($records as $record) {
+                            $hasData = $record->users()->exists() || 
+                                    $record->barangs()->exists() || 
+                                    $record->gudangs()->exists() || 
+                                    $record->jenisBarangs()->exists() || 
+                                    $record->penanggungJawabs()->exists();
+
+                            if ($hasData) {
+                                Notification::make()
+                                    ->danger()
+                                    ->title('Hapus Massal Gagal!')
+                                    ->body("Dinas '{$record->nama_opd}' masih memiliki data terkait (User/Barang/Gudang). Kosongkan data tersebut terlebih dahulu.")
+                                    ->persistent()
+                                    ->send();
+
+                                $action->halt(); // Berhenti seketika
+                            }
+                        }
+                    }),
                 ]),
             ]);
     }

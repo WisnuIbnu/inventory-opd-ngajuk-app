@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('gudangs', function (Blueprint $table) {
             $table->id();
             $table->string('nama_gudang', 150);
-            $table->foreignId('dinas_id')->constrained('dinas')->cascadeOnDelete();
+            $table->foreignId('dinas_id')->constrained('dinas')->cascadeOnDelete()->restrictOnDelete();
             $table->timestamps();
         });
     }

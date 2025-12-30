@@ -7,8 +7,11 @@ use App\Filament\Resources\JenisBarangResource\RelationManagers;
 use App\Models\JenisBarang;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Actions\DeleteAction;
+use Filament\Tables\Actions\DeleteBulkAction;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -59,10 +62,35 @@ class JenisBarangResource extends Resource
                     ])
                     ->actions([
                         Tables\Actions\EditAction::make(),
+                        DeleteAction::make()
+                        ->before(function (DeleteAction $action, JenisBarang $record) {
+                            if ($record->barangs()->count() > 0) {
+                                Notification::make()
+                                    ->danger()
+                                    ->title('Gagal Menghapus!')
+                                    ->body('Jenis Barang "' . $record->nama_jenis . '" masih memiliki data barang di dalamnya. Kosongkan data barang terlebih dahulu.')
+                                    ->persistent()
+                                    ->send();
+                                $action->halt();
+                            }
+                        }),
                     ])
                     ->bulkActions([
                         Tables\Actions\BulkActionGroup::make([
-                            Tables\Actions\DeleteBulkAction::make(),
+                            Tables\Actions\DeleteBulkAction::make()
+                            ->before(function (DeleteBulkAction $action, \Illuminate\Support\Collection $records) {
+                                foreach ($records as $record) {
+                                    if ($record->barangs()->count() > 0) {
+                                        Notification::make()
+                                            ->danger()
+                                            ->title('Hapus Massal Gagal')
+                                            ->body('Beberapa jenis barang yang dipilih masih memiliki data barang.')
+                                            ->send();
+
+                                        $action->halt();
+                                    }
+                                }
+                            }),
                         ]),
                     ]);
     }
