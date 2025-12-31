@@ -109,7 +109,12 @@ class DaftarBarangResource extends Resource
                     ->schema([
                         Infolists\Components\ImageEntry::make('gambar')
                             ->hiddenLabel()
-                            ->columnSpanFull(),
+                            ->width('100%')
+                            ->height('400px')
+                            ->columnSpanFull()
+                            ->extraImgAttributes([
+                                'class' => 'w-full h-auto md:h-[400px] object-cover rounded-lg'
+                            ]),
                         Infolists\Components\TextEntry::make('merk')->label('Nama/Merk'),
                         Infolists\Components\TextEntry::make('barcode')->label('ID Barang'),
                         Infolists\Components\TextEntry::make('kondisi')->badge(),
