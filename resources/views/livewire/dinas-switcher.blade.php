@@ -1,4 +1,4 @@
-<div class="p-4 border-b border-gray-200 dark:border-gray-800">
+<div class="pb-4 border-b border-gray-200 dark:border-gray-800">
     <label class="text-xs font-bold uppercase text-gray-500">Filter Wilayah OPD</label>
     <select 
         wire:model.live="selectedDinas" 

@@ -138,9 +138,9 @@
                                     <td class="value-col">{{ $barang->barcode }}</td>
                                 </tr>
                                 <tr>
-                                    <td class="label-col">Gudang</td>
+                                    <td class="label-col">Nama Barang</td>
                                     <td class="separator-col">:</td>
-                                    <td class="value-col">{{ $barang->gudang->nama_gudang ?? '-' }}</td>
+                                    <td class="value-col">{{ $barang->merk }}</td>
                                 </tr>
                                 <tr>
                                     <td class="label-col">Tahun</td>
@@ -148,9 +148,9 @@
                                     <td class="value-col"> {{ \Carbon\Carbon::parse($barang->tahun)->translatedFormat('d F Y') }}</td>
                                 </tr>
                                 <tr>
-                                    <td class="label-col">Nama Barang</td>
+                                    <td class="label-col">Gudang</td>
                                     <td class="separator-col">:</td>
-                                    <td class="value-col">{{ $barang->merk }}</td>
+                                    <td class="value-col">{{ $barang->gudang->nama_gudang ?? '-' }}</td>
                                 </tr>
                                 <tr>
                                     <td class="label-col">Harga</td>

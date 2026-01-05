@@ -73,7 +73,7 @@ class BarangResource extends Resource
                             })
                             ->live(),
 
-                Forms\Components\TextInput::make('merk')->required()->maxLength(150),
+                Forms\Components\TextInput::make('merk')->label('Merk/Nama Barang')->required()->maxLength(150),
                 Forms\Components\TextInput::make('register')->required()->maxLength(150),
                 Forms\Components\DatePicker::make('tahun')->required(),
                         
@@ -229,30 +229,49 @@ public static function table(Table $table): Table
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                     Tables\Actions\BulkAction::make('downloadStikerMasal')
-                        ->label('Download Stiker Terpilih')
-                        ->icon('heroicon-o-printer')
-                        ->color('success')
-                        ->action(function (\Illuminate\Support\Collection $records) {
-                            $records->transform(function ($barang) {
-                                $qrSvg = QrCode::format('svg')
+                    ->label('Download Stiker Terpilih')
+                    ->icon('heroicon-o-printer')
+                    ->color('success')
+                    // 1. Tambahkan validasi SEBELUM aksi dijalankan
+                    ->before(function (Tables\Actions\BulkAction $action, \Illuminate\Support\Collection $records) {
+                        if ($records->count() > 50) {
+                            \Filament\Notifications\Notification::make()
+                                ->danger()
+                                ->title('Gagal Download')
+                                ->body('Maksimal 1 kali download adalah 50 stiker. Anda memilih ' . $records->count() . ' stiker. Silakan kurangi pilihan Anda.')
+                                ->persistent()
+                                ->send();
+
+                            // Membatalkan eksekusi action
+                            $action->halt();
+                        }
+                    })
+                    ->action(function (\Illuminate\Support\Collection $records) {
+                        // 2. Optimasi Memori agar tidak gampang exhausted
+                        ini_set('memory_limit', '512M');
+                        set_time_limit(300);
+
+                        $records->transform(function ($barang) {
+                            // Gunakan format PNG untuk stabilitas DomPDF (opsional, tapi seringkali lebih ringan dari SVG)
+                            $qrSvg = QrCode::format('svg')
                                 ->size(200)
                                 ->margin(1)
                                 ->generate($barang->barcode);
 
-                                $barang->qr_base64 = 'data:image/svg+xml;base64,' . base64_encode($qrSvg);
-                                return $barang;
-                            });
+                            $barang->qr_base64 = 'data:image/svg+xml;base64,' . base64_encode($qrSvg);
+                            return $barang;
+                        });
 
-                            $pdf = Pdf::loadView('filament.columns.stiker-massal', [
-                                'barangs' => $records
-                            ])->setOption('isRemoteEnabled', true)
-                              ->setOption('isHtml5ParserEnabled', true)
-                              ->setPaper('a4', 'portrait');
+                        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('filament.columns.stiker-massal', [
+                            'barangs' => $records
+                        ])->setOption('isRemoteEnabled', true)
+                        ->setOption('isHtml5ParserEnabled', true)
+                        ->setPaper('a4', 'portrait');
 
-                            return response()->streamDownload(function () use ($pdf) {
-                                echo $pdf->output();
-                            }, "stiker-masal-" . now()->format('Ymd') . ".pdf");
-                        }),
+                        return response()->streamDownload(function () use ($pdf) {
+                            echo $pdf->output();
+                        }, "stiker-masal-" . now()->format('Ymd') . ".pdf");
+                    }),
                 ]),
             ]); 
     }

@@ -2,13 +2,97 @@
 
 use App\Models\Dinas;
 use App\Models\User;
+use App\Models\Gudang;
+use App\Models\PenanggungJawab;
+use App\Models\JenisBarang;
+use App\Models\Barang;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Carbon\Carbon;
 
 class DatabaseSeeder extends Seeder
 {
     public function run()
     {
+
+        $merkBarangMap = [
+        'Laptop' => [
+            'Asus Vivobook 14 Pro Max',
+            'Lenovo IdeaPad Slim 3',
+            'HP Pavilion 14',
+            'Acer Aspire 5',
+            'Dell Inspiron 14',
+        ],
+        'Komputer' => [
+            'Dell OptiPlex 7090',
+            'HP ProDesk 400',
+            'Lenovo ThinkCentre M70',
+        ],
+        'Printer' => [
+            'Epson L3210',
+            'Canon PIXMA G3020',
+            'HP DeskJet 2776',
+        ],
+        'Scanner' => [
+            'Canon LiDE 300',
+            'Epson Perfection V39',
+        ],
+        'Proyektor' => [
+            'BenQ MS550',
+            'Epson EB-X06',
+        ],
+        'AC' => [
+            'LG DualCool 1 PK',
+            'Panasonic Inverter 1 PK',
+        ],
+        'Televisi' => [
+            'Samsung 43 Inch UHD',
+            'LG Smart TV 42 Inch',
+        ],
+        'Kamera' => [
+            'Canon EOS 600D',
+            'Nikon D3500',
+        ],
+        'Sound System' => [
+            'Polytron PAS 8',
+            'Advance M180',
+        ],
+    ];
+
+
+        // ===============================
+        // DATA DUMMY
+        // ===============================
+        $namaGudangList = [
+            'Gudang Utama',
+            'Gudang Arsip',
+            'Gudang Logistik',
+            'Gudang Aset',
+            'Gudang Inventaris',
+            'Gudang Operasional',
+            'Gudang Peralatan',
+            'Gudang Cadangan',
+            'Gudang Lama',
+            'Gudang Baru',
+        ];
+
+        $namaPenanggungJawabList = [
+            'Slamet', 'Budi', 'Agus', 'Sutrisno', 'Joko',
+            'Wahyu', 'Rudi', 'Andi', 'Dedi', 'Eko',
+            'Siti', 'Sri', 'Ayu', 'Dewi', 'Lina',
+        ];
+
+        $jenisBarangList = [
+            'Laptop', 'Komputer', 'Printer', 'Scanner',
+            'Proyektor', 'Meja', 'Kursi', 'Lemari Arsip',
+            'AC', 'Kipas Angin', 'Tenda', 'Sound System',
+            'Kamera', 'Televisi', 'Router', 'Switch',
+            'Pulpen', 'Buku',
+        ];
+
+        // ===============================
+        // DINAS ADMIN
+        // ===============================
         $dinasAdmin = Dinas::create([
             'nama_opd' => 'Dinas Administrator Sistem',
         ]);
@@ -21,6 +105,9 @@ class DatabaseSeeder extends Seeder
             'dinas_id' => $dinasAdmin->id,
         ]);
 
+        // ===============================
+        // DAFTAR DINAS
+        // ===============================
         $dinasList = [
             'Dinas Pendidikan',
             'Dinas Kesehatan',
@@ -82,6 +169,9 @@ class DatabaseSeeder extends Seeder
                 'nama_opd' => $namaDinas,
             ]);
 
+            // ===============================
+            // USER OPD
+            // ===============================
             User::create([
                 'name' => 'Operator ' . $namaDinas,
                 'email' => 'opd' . ($index + 1) . '@nganjukkab.test',
@@ -89,6 +179,74 @@ class DatabaseSeeder extends Seeder
                 'role' => 'OPD',
                 'dinas_id' => $dinas->id,
             ]);
+
+            // ===============================
+            // GUDANG (RANDOM)
+            // ===============================
+            $gudangs = collect();
+            foreach (collect($namaGudangList)->random(10) as $namaGudang) {
+                $gudangs->push(Gudang::create([
+                    'nama_gudang' => $namaGudang . ' ' . $namaDinas,
+                    'dinas_id' => $dinas->id,
+                ]));
+            }
+
+            // ===============================
+            // PENANGGUNG JAWAB (NAMA ORANG)
+            // ===============================
+            $penanggungJawabs = collect();
+            foreach (collect($namaPenanggungJawabList)->random(10) as $namaPJ) {
+                $penanggungJawabs->push(PenanggungJawab::create([
+                    'nama' => $namaPJ,
+                    'dinas_id' => $dinas->id,
+                ]));
+            }
+
+            // ===============================
+            // JENIS BARANG (NAMA BARANG)
+            // ===============================
+            $jenisBarangs = collect();
+            foreach (collect($jenisBarangList)->random(10) as $jenis) {
+                $jenisBarangs->push(JenisBarang::create([
+                    'nama_jenis' => $jenis,
+                    'dinas_id' => $dinas->id,
+                ]));
+            }
+
+            // ===============================
+            // BARANG (50 PER DINAS)
+            // ===============================
+            for ($i = 1; $i <= 100; $i++) {
+
+                $jenisBarang = $jenisBarangs->random();
+                $namaJenis = $jenisBarang->nama_jenis;
+
+                $merk = $merkBarangMap[$namaJenis] ?? [$namaJenis . ' Standar'];
+
+                $createdAt = Carbon::now()
+                    ->subYears(rand(0, 5))
+                    ->subDays(rand(0, 365))
+                    ->setTime(rand(0, 23), rand(0, 59), rand(0, 59));
+
+                $updatedAt = (clone $createdAt)
+                    ->addDays(rand(0, 60))
+                    ->addMinutes(rand(0, 1440));
+
+                Barang::create([
+                    'jenis_barang_id' => $jenisBarang->id,
+                    'merk' => collect($merk)->random(),
+                    'register' => 'REG-' . strtoupper(uniqid()),
+                    'gambar' => 'https://dummyimage.com/300x200/cccccc/000000&text=' . urlencode($namaJenis),
+                    'tahun' => Carbon::now()->subYears(rand(1, 5))->subDays(rand(0, 365)),
+                    'penanggung_jawab_id' => $penanggungJawabs->random()->id,
+                    'harga' => rand(1_000_000, 20_000_000),
+                    'gudang_id' => $gudangs->random()->id,
+                    'dinas_id' => $dinas->id,
+                    'kondisi' => ['baik', 'tidak digunakan', 'rusak'][rand(0, 2)],
+                    'created_at' => $createdAt,
+                    'updated_at' => $updatedAt,
+                ]);
+            }
         }
     }
 }
