@@ -11,15 +11,13 @@ use Illuminate\Support\Carbon;
 class TrendAsetChart extends ChartWidget
 {
     protected static ?string $heading = 'Tren Penambahan Aset';
-    
-    // Menentukan filter default saat pertama kali dimuat
+
     public ?string $filter = null;
 
     protected function getFilters(): ?array
     {
         $currentYear = now()->year;
         
-        // Membuat list 5 tahun terakhir untuk dropdown
         return [
             $currentYear => (string) $currentYear,
             $currentYear - 1 => (string) ($currentYear - 1),
@@ -31,7 +29,6 @@ class TrendAsetChart extends ChartWidget
 
     protected function getData(): array
     {
-        // Jika filter kosong, gunakan tahun sekarang
         $activeFilter = $this->filter ?: now()->year;
 
         $sessionDinasId = session('admin_dinas_id');
@@ -41,7 +38,6 @@ class TrendAsetChart extends ChartWidget
             ->when(auth()->user()->role === 'OPD', fn($q) => $q->where('dinas_id', $userDinasId))
             ->when(auth()->user()->role === 'Admin' && $sessionDinasId, fn($q) => $q->where('dinas_id', $sessionDinasId));
 
-        // Tentukan rentang waktu berdasarkan filter tahun yang dipilih
         $startOfYear = Carbon::create($activeFilter)->startOfYear();
         $endOfYear = Carbon::create($activeFilter)->endOfYear();
 
@@ -56,10 +52,9 @@ class TrendAsetChart extends ChartWidget
                     'label' => "Aset Baru ($activeFilter)",
                     'data' => $data->map(fn (TrendValue $value) => $value->aggregate),
                     'borderColor' => '#3b82f6',
-                    'tension' => 0.3, // Membuat garis sedikit melengkung agar lebih modern
+                    'tension' => 0.3, 
                 ],
             ],
-            // Ubah format label agar hanya menampilkan nama bulan (Jan, Feb, dst)
             'labels' => $data->map(fn (TrendValue $value) => Carbon::parse($value->date)->translatedFormat('M')),
         ];
     }

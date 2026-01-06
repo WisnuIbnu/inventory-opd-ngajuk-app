@@ -38,16 +38,19 @@ class PenanggungJawabResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('nama')
-            ->required()
-            ->maxLength(150),
-        Forms\Components\Select::make('dinas_id')
-            ->relationship('dinas', 'nama_opd')
-            ->default(auth()->user()->dinas_id)
-            ->disabled(auth()->user()->role !== 'Admin')
-            ->dehydrated()
-            ->required(),
-            ]);
+            Forms\Components\TextInput::make('nama')
+                ->required()
+                ->maxLength(150),
+            Forms\Components\Select::make('dinas_id')
+                ->relationship('dinas', 'nama_opd')
+                ->default(auth()->user()->dinas_id)
+                ->disabled(auth()->user()->role !== 'Admin')
+                ->dehydrated()
+                ->required(),
+             Forms\Components\TextInput::make('jabatan')
+                ->required()
+                ->maxLength(150),
+                ]);
     }
 
     public static function table(Table $table): Table
@@ -56,6 +59,7 @@ class PenanggungJawabResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('nama')->searchable(),
                 Tables\Columns\TextColumn::make('dinas.nama_opd')->label('Dinas')->hidden(fn() => auth()->user()->role === 'OPD'),
+                Tables\Columns\TextColumn::make('jabatan')->searchable(),
                     ])
                     ->filters([
                         //

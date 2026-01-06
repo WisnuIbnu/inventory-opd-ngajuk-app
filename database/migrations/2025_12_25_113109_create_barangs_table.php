@@ -23,7 +23,8 @@ return new class extends Migration
             $table->decimal('harga', 15, 2);
             $table->foreignId('gudang_id')->constrained('gudangs')->restrictOnDelete();
             $table->foreignId('dinas_id')->constrained('dinas')->cascadeOnDelete()->restrictOnDelete();
-            $table->enum('kondisi', ['baik', 'tidak digunakan', 'rusak']);
+            $table->enum('kondisi', ['baik', 'tidak digunakan', 'rusak ringan', 'rusak berat', 'hibah', 'mutasi']);
+            $table->string('keterangan', 150)->nullable();
             $table->timestamps();
         });
     }

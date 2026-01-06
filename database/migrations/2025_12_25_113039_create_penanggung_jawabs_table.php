@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('nama', 150);
             $table->foreignId('dinas_id')->constrained('dinas')->cascadeOnDelete()->restrictOnDelete();
+            $table->string('jabatan', 150);
             $table->timestamps();
         });
     }

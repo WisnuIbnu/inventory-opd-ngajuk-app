@@ -12,7 +12,7 @@ class PenanggungJawab extends Model
     use HasFactory;
     use \App\Traits\FilterByDinas;
 
-    protected $fillable = ['nama', 'dinas_id'];
+    protected $fillable = ['nama', 'dinas_id', 'jabatan'];
 
     public function dinas(): BelongsTo 
     { 

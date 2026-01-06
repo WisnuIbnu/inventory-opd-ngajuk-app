@@ -9,7 +9,7 @@ use Filament\Widgets\TableWidget as BaseWidget;
 
 class BarangRusakTable extends BaseWidget
 {
-    protected static ?string $heading = 'Daftar Barang Rusak (Perlu Perhatian)';
+    protected static ?string $heading = 'Daftar Barang Rusak Berat (Perlu Perhatian)';
     protected int | string | array $columnSpan = 'full';
 
     public function table(Table $table): Table
@@ -20,7 +20,7 @@ class BarangRusakTable extends BaseWidget
         return $table
             ->query(
                 Barang::query()
-                    ->where('kondisi', 'rusak')
+                    ->where('kondisi', 'rusak berat')
                     ->when(auth()->user()->role === 'OPD', fn($q) => $q->where('dinas_id', $userDinasId))
                     ->when(auth()->user()->role === 'Admin' && $sessionDinasId, fn($q) => $q->where('dinas_id', $sessionDinasId))
             )

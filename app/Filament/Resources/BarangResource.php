@@ -17,6 +17,7 @@ use App\Models\Gudang;
 use App\Models\JenisBarang;
 use App\Models\PenanggungJawab;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Filament\Forms\Set;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class BarangResource extends Resource
@@ -89,19 +90,37 @@ class BarangResource extends Resource
                         <img src='https://bwipjs-api.metafloor.com/?bcid=qrcode&text={$record->barcode}&scale=3' 
                             style='border: 1px solid #ccc; padding: 5px; background: white;'>
                     ") : 'QR akan muncul setelah disimpan'),
-
-                Forms\Components\TextInput::make('harga')
-                    ->numeric()
-                    ->prefix('Rp')
-                    ->required(),
                 
                 
                 Forms\Components\Select::make('kondisi')
                     ->options([
                         'baik' => 'Baik',
                         'tidak digunakan' => 'Tidak Digunakan',
-                        'rusak' => 'Rusak',
-                    ])->required(),
+                        'rusak ringan' => 'Rusak Ringan',
+                        'rusak berat' => 'Rusak Berat',
+                        'mutasi' => 'Mutasi',
+                        'hibah' => 'Hibah',
+                    ])
+                    ->live()
+                    ->afterStateUpdated(function (Set $set, $state) {
+                        if ($state !== 'mutasi') {
+                            $set('keterangan', null);
+                        }
+                    })
+                    ->required(),
+
+
+                Forms\Components\Textarea::make('keterangan')
+                    ->label('Keterangan Mutasi')
+                    ->placeholder('Masukkan detail mutasi...')
+                    ->visible(fn (Get $get): bool => $get('kondisi') === 'mutasi')
+                    ->required(fn (Get $get): bool => $get('kondisi') === 'mutasi')
+                    ->columnSpanFull(),
+
+                Forms\Components\TextInput::make('harga')
+                    ->numeric()
+                    ->prefix('Rp')
+                    ->required(),
 
                 Forms\Components\FileUpload::make('gambar')
                     ->label('Foto Barang')
@@ -184,7 +203,8 @@ public static function table(Table $table): Table
                     ->color(fn (string $state): string => match ($state) {
                         'baik' => 'success',
                         'tidak digunakan' => 'warning',
-                        'rusak' => 'danger',
+                        'rusak ringan' => 'danger',
+                        'rusak berat' => 'danger',
                         default => 'gray',
                     }),
 

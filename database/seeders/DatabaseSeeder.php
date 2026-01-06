@@ -9,6 +9,7 @@ use App\Models\Barang;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Carbon\Carbon;
+use Illuminate\Support\Arr;
 
 class DatabaseSeeder extends Seeder
 {
@@ -105,6 +106,22 @@ class DatabaseSeeder extends Seeder
             'dinas_id' => $dinasAdmin->id,
         ]);
 
+
+
+        // ===============================
+        // DAFTAR Jabatan
+        // ===============================
+        $jabatanList = [
+            'Kepala Dinas',
+            'Sekretaris',
+            'Kepala Bidang',
+            'Kepala Seksi',
+            'Staff',
+            'Analis',
+            'Koordinator',
+        ];
+
+
         // ===============================
         // DAFTAR DINAS
         // ===============================
@@ -199,6 +216,7 @@ class DatabaseSeeder extends Seeder
                 $penanggungJawabs->push(PenanggungJawab::create([
                     'nama' => $namaPJ,
                     'dinas_id' => $dinas->id,
+                    'jabatan' => Arr::random($jabatanList),
                 ]));
             }
 
@@ -213,40 +231,52 @@ class DatabaseSeeder extends Seeder
                 ]));
             }
 
-            // ===============================
-            // BARANG (50 PER DINAS)
-            // ===============================
-            for ($i = 1; $i <= 100; $i++) {
+        // ===============================
+        // BARANG (50 PER DINAS)
+        // ===============================
+        for ($i = 1; $i <= 100; $i++) {
 
-                $jenisBarang = $jenisBarangs->random();
-                $namaJenis = $jenisBarang->nama_jenis;
+            $jenisBarang = $jenisBarangs->random();
+            $namaJenis = $jenisBarang->nama_jenis;
 
-                $merk = $merkBarangMap[$namaJenis] ?? [$namaJenis . ' Standar'];
+            $merk = $merkBarangMap[$namaJenis] ?? [$namaJenis . ' Standar'];
 
-                $createdAt = Carbon::now()
-                    ->subYears(rand(0, 5))
-                    ->subDays(rand(0, 365))
-                    ->setTime(rand(0, 23), rand(0, 59), rand(0, 59));
+            $createdAt = Carbon::now()
+                ->subYears(rand(0, 5))
+                ->subDays(rand(0, 365))
+                ->setTime(rand(0, 23), rand(0, 59), rand(0, 59));
 
-                $updatedAt = (clone $createdAt)
-                    ->addDays(rand(0, 60))
-                    ->addMinutes(rand(0, 1440));
+            $updatedAt = (clone $createdAt)
+                ->addDays(rand(0, 60))
+                ->addMinutes(rand(0, 1440));
 
-                Barang::create([
-                    'jenis_barang_id' => $jenisBarang->id,
-                    'merk' => collect($merk)->random(),
-                    'register' => 'REG-' . strtoupper(uniqid()),
-                    'gambar' => 'https://dummyimage.com/300x200/cccccc/000000&text=' . urlencode($namaJenis),
-                    'tahun' => Carbon::now()->subYears(rand(1, 5))->subDays(rand(0, 365)),
-                    'penanggung_jawab_id' => $penanggungJawabs->random()->id,
-                    'harga' => rand(1_000_000, 20_000_000),
-                    'gudang_id' => $gudangs->random()->id,
-                    'dinas_id' => $dinas->id,
-                    'kondisi' => ['baik', 'tidak digunakan', 'rusak'][rand(0, 2)],
-                    'created_at' => $createdAt,
-                    'updated_at' => $updatedAt,
-                ]);
+            // Pilih kondisi secara acak
+            $kondisiPilihan = ['baik', 'tidak digunakan', 'rusak ringan', 'rusak berat', 'hibah', 'mutasi'][rand(0, 5)];
+
+            // Logika Keterangan: Hanya isi jika kondisinya 'mutasi'
+            $keterangan = null;
+            if ($kondisiPilihan === 'mutasi') {
+                $lokasiMutasi = ['Dinas Kesehatan', 'Dinas Pendidikan', 'Kecamatan Nganjuk', 'Sekretariat Daerah'];
+                $keterangan = 'Dimutasi ke ' . collect($lokasiMutasi)->random() . ' pada ' . now()->format('d/m/Y');
             }
+
+            Barang::create([
+                'jenis_barang_id' => $jenisBarang->id,
+                'merk' => collect($merk)->random(),
+                'register' => 'REG-' . strtoupper(uniqid()),
+                'gambar' => 'https://dummyimage.com/300x200/cccccc/000000&text=' . urlencode($namaJenis),
+                'tahun' => Carbon::now()->subYears(rand(1, 5))->subDays(rand(0, 365)),
+                'barcode' => 'BRC-' . strtoupper(uniqid()), // Pastikan barcode juga terisi jika unik
+                'penanggung_jawab_id' => $penanggungJawabs->random()->id,
+                'harga' => rand(1_000_000, 20_000_000),
+                'gudang_id' => $gudangs->random()->id,
+                'dinas_id' => $dinas->id,
+                'kondisi' => $kondisiPilihan,
+                'keterangan' => $keterangan, // Kolom baru ditambahkan di sini
+                'created_at' => $createdAt,
+                'updated_at' => $updatedAt,
+            ]);
+        }
         }
     }
 }

@@ -25,6 +25,7 @@ class Barang extends Model
         'gudang_id',
         'dinas_id',
         'kondisi',
+        'keterangan',
         'created_at',
         'update_at',
     ];
