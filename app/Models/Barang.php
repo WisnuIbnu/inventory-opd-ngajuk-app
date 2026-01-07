@@ -26,6 +26,7 @@ class Barang extends Model
         'dinas_id',
         'kondisi',
         'keterangan',
+        'jenis_aset',
         'created_at',
         'update_at',
     ];

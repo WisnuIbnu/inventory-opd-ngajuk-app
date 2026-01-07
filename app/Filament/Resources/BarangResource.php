@@ -127,14 +127,49 @@ class BarangResource extends Resource
                     ->image()
                     ->disk('public')
                     ->directory('barang')
-                    ->maxSize(100)
+                    ->maxSize(200)
                     ->required()
                     ->validationMessages([
                         'max' => 'Ukuran file terlalu besar, maksimal 100 KB.',
                     ])
                 ])->columns(2),
 
-                Forms\Components\Section::make('Lokasi & Penanggung Jawab')
+
+                Forms\Components\Section::make('Jenis Aset & Syarat Wajib')
+                    ->schema([
+                       Forms\Components\Select::make('jenis_aset')
+                        ->reactive() 
+                        ->required()
+                        ->options([
+                            'aset tetap' => 'Aset Tetap',
+                            'aset ekstrakompatibel' => 'Aset Ekstrakompatibel',
+                            'aset barjas' => 'Aset Barjas',
+                        ])
+                        ->afterStateUpdated(function ($state, Set $set) {
+                            $set('info_jenis_aset', match ($state) {
+                                'aset tetap' =>
+                                    "Aset berwujud yang digunakan lebih dari 12 bulan dan dicatat dalam neraca.\nContoh: kendaraan, gedung, komputer.",
+                                'aset ekstrakompatibel' =>
+                                    "Barang milik instansi yang tidak dicatat dalam neraca.\nContoh: ATK, buku, perlengkapan habis pakai.",
+                                'aset barjas' =>
+                                    "Barang dan/atau jasa hasil pengadaan.\nDapat menghasilkan aset tetap atau barang habis pakai.",
+                                default => '',
+                            });
+                        }),
+
+
+                        Forms\Components\Placeholder::make('info_jenis_aset')
+                            ->label('Syarat Wajib Terpenuhi Setiap Jenis Aset')
+                            ->content(fn (Get $get) => match ($get('jenis_aset')) {
+                                'aset tetap' => "Aset berwujud yang digunakan lebih dari 12 bulan dan dicatat dalam neraca.\nContoh: kendaraan, gedung, komputer.",
+                                'aset ekstrakompatibel' => "Barang milik instansi yang tidak dicatat dalam neraca.\nContoh: ATK, buku, perlengkapan habis pakai.",
+                                'aset barjas' => "Barang dan/atau jasa hasil pengadaan.\nDapat menghasilkan aset tetap atau barang habis pakai.",
+                                default => '-',
+                            })
+                    ])->columns(2),
+                    
+                
+                    Forms\Components\Section::make('Lokasi & Penanggung Jawab')
                     ->schema([
                         Forms\Components\Select::make('gudang_id')
                             ->label('Lokasi Gudang')
@@ -193,6 +228,9 @@ public static function table(Table $table): Table
                     ->money('IDR')
                     ->sortable(),
 
+                    Tables\Columns\TextColumn::make('jenis_aset')
+                    ->searchable(),
+
                 Tables\Columns\ImageColumn::make('gambar')
                     ->disk('public')
                     ->label('Foto')
@@ -201,11 +239,13 @@ public static function table(Table $table): Table
                 Tables\Columns\TextColumn::make('kondisi')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
-                        'baik' => 'success',
-                        'tidak digunakan' => 'warning',
-                        'rusak ringan' => 'danger',
-                        'rusak berat' => 'danger',
-                        default => 'gray',
+                        'baik'             => 'success',
+                        'tidak digunakan'  => 'warning',
+                        'rusak ringan'     => 'warning',
+                        'rusak berat'      => 'danger',
+                        'hibah'            => 'info',
+                        'mutasi'           => 'primary',
+                        default            => 'gray',
                     }),
 
                 Tables\Columns\TextColumn::make('gudang.nama_gudang')
@@ -216,7 +256,16 @@ public static function table(Table $table): Table
                     ->options([
                         'baik' => 'Baik',
                         'tidak digunakan' => 'Tidak Digunakan',
-                        'rusak' => 'Rusak',
+                        'rusak ringan' => 'Rusak Ringan',
+                        'rusak berat' => 'Rusak Berat',
+                        'hibah' => 'Hibah',
+                        'mutasi' => 'Mutasi',
+                    ]),
+                Tables\Filters\SelectFilter::make('jenis_aset')
+                    ->options([
+                        'aset tetap' => 'Aset Tetap',
+                        'aset ekstrakompatibel' => 'Aset Ekstrakompatibel',
+                        'aset barjas' => 'Aset Barjas',
                     ]),
             ])
             ->actions([
@@ -252,7 +301,6 @@ public static function table(Table $table): Table
                     ->label('Download Stiker Terpilih')
                     ->icon('heroicon-o-printer')
                     ->color('success')
-                    // 1. Tambahkan validasi SEBELUM aksi dijalankan
                     ->before(function (Tables\Actions\BulkAction $action, \Illuminate\Support\Collection $records) {
                         if ($records->count() > 50) {
                             \Filament\Notifications\Notification::make()
@@ -261,18 +309,14 @@ public static function table(Table $table): Table
                                 ->body('Maksimal 1 kali download adalah 50 stiker. Anda memilih ' . $records->count() . ' stiker. Silakan kurangi pilihan Anda.')
                                 ->persistent()
                                 ->send();
-
-                            // Membatalkan eksekusi action
                             $action->halt();
                         }
                     })
                     ->action(function (\Illuminate\Support\Collection $records) {
-                        // 2. Optimasi Memori agar tidak gampang exhausted
                         ini_set('memory_limit', '512M');
                         set_time_limit(300);
 
                         $records->transform(function ($barang) {
-                            // Gunakan format PNG untuk stabilitas DomPDF (opsional, tapi seringkali lebih ringan dari SVG)
                             $qrSvg = QrCode::format('svg')
                                 ->size(200)
                                 ->margin(1)

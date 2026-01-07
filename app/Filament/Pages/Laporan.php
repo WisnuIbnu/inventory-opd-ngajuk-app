@@ -42,14 +42,25 @@ class Laporan extends Page implements HasForms
                             ->label('Jenis Laporan')
                             ->options([
                                 'semua' => 'Semua Barang',
-                                'rusak' => 'Barang Rusak',
+                                'rusak berat' => 'Barang Rusak',
                                 'tidak_digunakan' => 'Barang Tidak Digunakan',
                                 'gudang' => 'Berdasarkan Lokasi Gudang',
+                                'jenis_aset' => 'Berdasarkan Jenis Aset',
                             ])
                             ->live()
                             ->required(),
 
-                        Select::make('gudang_id')
+                        Select::make('jenis_aset')
+                            ->label('Pilih Jenis Aset')
+                            ->options([
+                                'aset tetap' => 'Aset Tetap',
+                                'aset ekstrakompatibel' => 'Aset Ekstrakompatibel',
+                                'aset barjas' => 'Aset Barjas',
+                            ])
+                            ->visible(fn ($get) => $get('kategori') === 'jenis_aset')
+                            ->required(fn ($get) => $get('kategori') === 'jenis_aset'),
+
+                            Select::make('gudang_id')
                             ->label('Pilih Gudang')
                             ->options(function () {
                                 $query = Gudang::query();

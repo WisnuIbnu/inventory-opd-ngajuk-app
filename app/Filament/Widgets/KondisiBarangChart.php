@@ -27,7 +27,6 @@ class KondisiBarangChart extends ChartWidget
         $tidakDigunakan = (clone $query)->where('kondisi', 'tidak digunakan')->count();
         $rusakRingan = (clone $query)->where('kondisi', 'rusak ringan')->count();
         $rusakBerat = (clone $query)->where('kondisi', 'rusak berat')->count();
-        $rusakHibah = (clone $query)->where('kondisi', 'hibah')->count();
         $hibah = (clone $query)->where('kondisi', 'hibah')->count();
         $mutasi = (clone $query)->where('kondisi', 'mutasi')->count();
 
@@ -54,7 +53,7 @@ class KondisiBarangChart extends ChartWidget
                     ],
                 ],
             ],
-            'labels' => ['Baik', 'Tidak Digunakan', 'Rusak'],
+            'labels' => ['Baik', 'Tidak Digunakan', 'Rusak Ringan', 'Rusak Berat', 'Hibah', 'Mutasi' ],
         ];
     }
 

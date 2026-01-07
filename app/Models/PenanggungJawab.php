@@ -14,6 +14,8 @@ class PenanggungJawab extends Model
 
     protected $fillable = ['nama', 'dinas_id', 'jabatan'];
 
+    protected $appends = ['nama_jabatan'];
+
     public function dinas(): BelongsTo 
     { 
         return $this->belongsTo(Dinas::class); 
@@ -22,5 +24,10 @@ class PenanggungJawab extends Model
     public function barangs(): HasMany
     {
         return $this->hasMany(Barang::class, 'penanggung_jawab_id');
+    }
+
+     public function getNamaJabatanAttribute(): string
+    {
+        return "{$this->nama} - {$this->jabatan}";
     }
 }

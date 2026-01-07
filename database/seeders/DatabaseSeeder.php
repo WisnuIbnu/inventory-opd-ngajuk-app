@@ -250,10 +250,11 @@ class DatabaseSeeder extends Seeder
                 ->addDays(rand(0, 60))
                 ->addMinutes(rand(0, 1440));
 
-            // Pilih kondisi secara acak
+            
             $kondisiPilihan = ['baik', 'tidak digunakan', 'rusak ringan', 'rusak berat', 'hibah', 'mutasi'][rand(0, 5)];
 
-            // Logika Keterangan: Hanya isi jika kondisinya 'mutasi'
+            $jenisAsetPilihan = ['aset tetap', 'aset ekstrakompatibel', 'aset barjas'][rand(0, 2)];
+
             $keterangan = null;
             if ($kondisiPilihan === 'mutasi') {
                 $lokasiMutasi = ['Dinas Kesehatan', 'Dinas Pendidikan', 'Kecamatan Nganjuk', 'Sekretariat Daerah'];
@@ -272,7 +273,8 @@ class DatabaseSeeder extends Seeder
                 'gudang_id' => $gudangs->random()->id,
                 'dinas_id' => $dinas->id,
                 'kondisi' => $kondisiPilihan,
-                'keterangan' => $keterangan, // Kolom baru ditambahkan di sini
+                'jenis_aset' => $jenisAsetPilihan, 
+                'keterangan' => $keterangan, 
                 'created_at' => $createdAt,
                 'updated_at' => $updatedAt,
             ]);

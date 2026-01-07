@@ -118,6 +118,13 @@ class DaftarBarangResource extends Resource
                         Infolists\Components\TextEntry::make('merk')->label('Nama/Merk'),
                         Infolists\Components\TextEntry::make('barcode')->label('ID Barang'),
                         Infolists\Components\TextEntry::make('kondisi')->badge(),
+                        Infolists\Components\TextEntry::make('keterangan')
+                            ->label('Keterangan Mutasi')
+                            ->badge()
+                            ->color('primary')
+                            ->visible(fn ($record) => $record?->kondisi === 'mutasi'),
+                        Infolists\Components\TextEntry::make('penanggungJawab.nama_jabatan')
+                            ->label('Penanggung Jawab'),
                         Infolists\Components\TextEntry::make('dinas.nama_opd')->label('Pemilik'),
                         Infolists\Components\TextEntry::make('gudang.nama_gudang')->label('Lokasi'),
                         Infolists\Components\ImageEntry::make('qr_visual')
