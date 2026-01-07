@@ -94,9 +94,29 @@ class DaftarBarangResource extends Resource
                 Tables\Filters\SelectFilter::make('dinas_id')
                     ->relationship('dinas', 'nama_opd')
                     ->label('Filter Dinas')
-                    // Otomatis pilih sesuai switcher jika Admin
                     ->default(fn () => auth()->user()->role === 'Admin' ? session('admin_dinas_id') : null)
                     ->hidden(fn () => auth()->user()->role === 'OPD'),
+                Tables\Filters\SelectFilter::make('kondisi')
+                 ->label('Filter Kondisi')
+                 ->options([
+                        'baik' => 'Baik',
+                        'tidak digunakan' => 'Tidak Digunakan',
+                        'rusak ringan' => 'Rusak Ringan',
+                        'rusak berat' => 'Rusak Berat',
+                        'hibah' => 'Hibah',
+                        'mutasi' => 'Mutasi',
+                    ]),
+                Tables\Filters\SelectFilter::make('gudang_id')
+                    ->relationship('gudang', 'nama_gudang')
+                    ->label('Filter Gudang'),
+                Tables\Filters\SelectFilter::make('jenis_aset')
+                    ->label('Filter Jenis Aset')
+                    ->options([
+                        'aset tetap' => 'Aset Tetap',
+                        'aset ekstrakompatibel' => 'Aset Ekstrakompatibel',
+                        'aset barjas' => 'Aset Barjas',
+                    ]),
+                
             ])
             ->recordUrl(fn (Barang $record): string => static::getUrl('view', ['record' => $record]));
     }
@@ -116,7 +136,7 @@ class DaftarBarangResource extends Resource
                                 'class' => 'w-full h-auto md:h-[400px] object-cover rounded-lg'
                             ]),
                         Infolists\Components\TextEntry::make('merk')->label('Nama/Merk'),
-                        Infolists\Components\TextEntry::make('barcode')->label('ID Barang'),
+                        Infolists\Components\TextEntry::make('barcode')->label('Kode Barang'),
                         Infolists\Components\TextEntry::make('kondisi')->badge(),
                         Infolists\Components\TextEntry::make('keterangan')
                             ->label('Keterangan Mutasi')
@@ -127,6 +147,14 @@ class DaftarBarangResource extends Resource
                             ->label('Penanggung Jawab'),
                         Infolists\Components\TextEntry::make('dinas.nama_opd')->label('Pemilik'),
                         Infolists\Components\TextEntry::make('gudang.nama_gudang')->label('Lokasi'),
+                        Infolists\Components\TextEntry::make('jenis_aset')
+                        ->label('Jenis Aset')
+                        ->formatStateUsing(fn (string $state): string => match ($state) {
+                            'aset tetap' => 'Aset Tetap (Neraca)',
+                            'aset ekstrakompatibel' => 'Aset Ekstrakompatibel (Habis Pakai)',
+                            'aset barjas' => 'Aset Barang & Jasa',
+                            default => $state,
+                        }),
                         Infolists\Components\ImageEntry::make('qr_visual')
                                 ->label('Kode QR')
                                 ->getStateUsing(function ($record) {

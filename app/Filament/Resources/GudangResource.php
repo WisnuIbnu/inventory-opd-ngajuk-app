@@ -55,6 +55,7 @@ class GudangResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('nama_gudang')->searchable(),
                 Tables\Columns\TextColumn::make('dinas.nama_opd')->label('Dinas')->hidden(fn() => auth()->user()->role === 'OPD'),
+                Tables\Columns\TextColumn::make('created_at')->label('Ditambahkan')->dateTime(),
                     ])
                     ->filters([
                         //

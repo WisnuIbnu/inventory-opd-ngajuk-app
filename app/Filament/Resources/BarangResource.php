@@ -78,11 +78,17 @@ class BarangResource extends Resource
                 Forms\Components\TextInput::make('register')->required()->maxLength(150),
                 Forms\Components\DatePicker::make('tahun')->required(),
                         
-                Forms\Components\TextInput::make('barcode')
-                    ->label('ID Barang')
-                    ->disabled() 
-                    ->placeholder('Otomatis saat disimpan')
-                    ->dehydrated(),
+            Forms\Components\TextInput::make('barcode')
+                ->label('Kode Barang')
+                ->required()
+                ->unique(ignoreRecord: true) 
+                ->disabled(fn ($context) => $context === 'edit')
+                ->dehydrated() 
+                ->placeholder('Masukkan Kode Barang/Barcode manual')
+                ->helperText(fn ($context) => $context === 'edit' 
+                    ? 'Kode Barang tidak dapat diubah untuk menjaga integritas QR Code.' 
+                    : 'Masukkan kode unik untuk barcode barang ini.')
+                ->live(onBlur: true), 
                         
                 Forms\Components\Placeholder::make('qr_preview')
                     ->label('Preview QR Code')
@@ -130,7 +136,7 @@ class BarangResource extends Resource
                     ->maxSize(200)
                     ->required()
                     ->validationMessages([
-                        'max' => 'Ukuran file terlalu besar, maksimal 100 KB.',
+                        'max' => 'Ukuran file terlalu besar, maksimal 200 KB.',
                     ])
                 ])->columns(2),
 
@@ -185,8 +191,16 @@ class BarangResource extends Resource
                             ->required()
                             ->options(function (Get $get) {
                                 $dinasId = $get('dinas_id');
-                                if (!$dinasId) return [];
-                                return PenanggungJawab::where('dinas_id', $dinasId)->pluck('nama', 'id');
+                                if (! $dinasId) {
+                                    return [];
+                                }
+
+                                return PenanggungJawab::where('dinas_id', $dinasId)
+                                    ->get()
+                                    ->mapWithKeys(fn ($pj) => [
+                                        $pj->id => $pj->nama_jabatan,
+                                    ])
+                                    ->toArray();
                             }),
                     ])->columns(2),
             ]);
@@ -202,7 +216,7 @@ public static function table(Table $table): Table
                     ->hidden(fn () => auth()->user()->role === 'OPD'),
 
                 Tables\Columns\TextColumn::make('barcode')
-                    ->label('ID Barang')
+                    ->label('Kode Barang')
                     ->fontFamily('mono')
                     ->searchable()
                     ->copyable()
@@ -250,6 +264,8 @@ public static function table(Table $table): Table
 
                 Tables\Columns\TextColumn::make('gudang.nama_gudang')
                     ->label('Lokasi'),
+
+            Tables\Columns\TextColumn::make('created_at')->label('Ditambahkan')->dateTime(),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('kondisi')

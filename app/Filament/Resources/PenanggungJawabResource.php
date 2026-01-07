@@ -41,15 +41,15 @@ class PenanggungJawabResource extends Resource
             Forms\Components\TextInput::make('nama')
                 ->required()
                 ->maxLength(150),
+            Forms\Components\TextInput::make('jabatan')
+                ->required()
+                ->maxLength(150),
             Forms\Components\Select::make('dinas_id')
                 ->relationship('dinas', 'nama_opd')
                 ->default(auth()->user()->dinas_id)
                 ->disabled(auth()->user()->role !== 'Admin')
                 ->dehydrated()
                 ->required(),
-             Forms\Components\TextInput::make('jabatan')
-                ->required()
-                ->maxLength(150),
                 ]);
     }
 
@@ -60,6 +60,7 @@ class PenanggungJawabResource extends Resource
                 Tables\Columns\TextColumn::make('nama')->searchable(),
                 Tables\Columns\TextColumn::make('dinas.nama_opd')->label('Dinas')->hidden(fn() => auth()->user()->role === 'OPD'),
                 Tables\Columns\TextColumn::make('jabatan')->searchable(),
+                Tables\Columns\TextColumn::make('created_at')->label('Ditambahkan')->dateTime(),
                     ])
                     ->filters([
                         //

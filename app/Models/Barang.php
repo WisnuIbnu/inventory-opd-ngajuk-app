@@ -36,15 +36,6 @@ class Barang extends Model
         'harga' => 'decimal:2',
     ];
 
-    protected static function booted()
-    {
-
-        static::creating(function ($barang) {
-            if (empty($barang->barcode)) {
-                $barang->barcode = 'QR-' . date('Ymd') . '-' . strtoupper(Str::random(8));
-            }
-        });
-    }
 
     public function getRouteKeyName(): string
     {

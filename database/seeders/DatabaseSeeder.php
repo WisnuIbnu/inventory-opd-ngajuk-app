@@ -265,9 +265,9 @@ class DatabaseSeeder extends Seeder
                 'jenis_barang_id' => $jenisBarang->id,
                 'merk' => collect($merk)->random(),
                 'register' => 'REG-' . strtoupper(uniqid()),
-                'gambar' => 'https://dummyimage.com/300x200/cccccc/000000&text=' . urlencode($namaJenis),
+                'gambar' => 'barang/01KEBP4GA8PZ859HHZ1KWXCMBY.jpeg',
                 'tahun' => Carbon::now()->subYears(rand(1, 5))->subDays(rand(0, 365)),
-                'barcode' => 'BRC-' . strtoupper(uniqid()), // Pastikan barcode juga terisi jika unik
+                'barcode' => 'QR-' . strtoupper(uniqid()),
                 'penanggung_jawab_id' => $penanggungJawabs->random()->id,
                 'harga' => rand(1_000_000, 20_000_000),
                 'gudang_id' => $gudangs->random()->id,

@@ -38,8 +38,8 @@ class DinasResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('nama_opd')->searchable(),
-                Tables\Columns\TextColumn::make('created_at')->dateTime(),
+                Tables\Columns\TextColumn::make('nama_opd')->label('Nama OPD')->searchable(),
+                Tables\Columns\TextColumn::make('created_at')->label('Ditambahkan')->dateTime(),
             ])
             ->filters([
                 //
@@ -81,7 +81,7 @@ class DinasResource extends Resource
                                     ->persistent()
                                     ->send();
 
-                                $action->halt(); // Berhenti seketika
+                                $action->halt(); 
                             }
                         }
                     }),
