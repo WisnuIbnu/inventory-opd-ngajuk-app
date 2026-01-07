@@ -60,7 +60,12 @@ class PenanggungJawabResource extends Resource
                 Tables\Columns\TextColumn::make('nama')->searchable(),
                 Tables\Columns\TextColumn::make('dinas.nama_opd')->label('Dinas')->hidden(fn() => auth()->user()->role === 'OPD'),
                 Tables\Columns\TextColumn::make('jabatan')->searchable(),
-                Tables\Columns\TextColumn::make('created_at')->label('Ditambahkan')->dateTime(),
+                Tables\Columns\TextColumn::make('created_at')
+                    ->label('Ditambahkan')
+                    ->dateTime('d/m/Y') // Tanggal utama
+                    ->description(fn ($record) => "Jam: " . $record->created_at?->format('H:i')) // Jam di bawahnya
+                    ->color('gray')
+                    ->sortable(),
                     ])
                     ->filters([
                         //

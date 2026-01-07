@@ -29,7 +29,8 @@ class BarangResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        $query = parent::getEloquentQuery();
+        return parent::getEloquentQuery()
+        ->with(['creator', 'editor', 'dinas', 'jenisBarang']);
 
         if (auth()->user()->role === 'OPD') {
             return $query->where('barangs.dinas_id', auth()->user()->dinas_id);
@@ -265,7 +266,19 @@ public static function table(Table $table): Table
                 Tables\Columns\TextColumn::make('gudang.nama_gudang')
                     ->label('Lokasi'),
 
-            Tables\Columns\TextColumn::make('created_at')->label('Ditambahkan')->dateTime(),
+                Tables\Columns\TextColumn::make('creator.name')
+                    ->label('Pembuat')
+                    ->sortable()
+                    ->description(fn ($record) => "Waktu: " . ($record->created_at?->format('d/m/Y H:i') ?? '-'))
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->placeholder('User Dihapus'),
+                    
+                Tables\Columns\TextColumn::make('editor.name')
+                    ->label('Pengubah Terakhir')
+                    ->sortable()
+                    ->description(fn ($record) => "Waktu: " . ($record->updated_at?->format('d/m/Y H:i') ?? '-'))
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->placeholder('User Dihapus'),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('kondisi')

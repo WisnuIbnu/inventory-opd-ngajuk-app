@@ -26,6 +26,8 @@ return new class extends Migration
             $table->enum('kondisi', ['baik', 'tidak digunakan', 'rusak ringan', 'rusak berat', 'hibah', 'mutasi']);
             $table->string('keterangan', 150)->nullable();
             $table->enum('jenis_aset',['aset tetap', 'aset ekstrakompatibel', 'aset barjas']);
+            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
         });
     }

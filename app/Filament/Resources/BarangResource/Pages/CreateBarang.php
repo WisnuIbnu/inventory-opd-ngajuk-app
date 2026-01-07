@@ -16,6 +16,9 @@ class CreateBarang extends CreateRecord
             $data['dinas_id'] = auth()->user()->dinas_id;
         }
 
+        $data['created_by'] = auth()->id();
+        $data['updated_by'] = auth()->id();
+
         return $data;
     }
 }

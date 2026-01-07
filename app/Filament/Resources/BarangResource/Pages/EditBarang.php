@@ -10,6 +10,13 @@ class EditBarang extends EditRecord
 {
     protected static string $resource = BarangResource::class;
 
+    protected function mutateFormDataBeforeSave(array $data): array
+    {
+        $data['updated_by'] = auth()->id();
+
+        return $data;
+    }
+
     protected function getHeaderActions(): array
     {
         return [

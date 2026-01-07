@@ -39,7 +39,12 @@ class DinasResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('nama_opd')->label('Nama OPD')->searchable(),
-                Tables\Columns\TextColumn::make('created_at')->label('Ditambahkan')->dateTime(),
+                Tables\Columns\TextColumn::make('created_at')
+                    ->label('Ditambahkan')
+                    ->dateTime('d/m/Y') // Tanggal utama
+                    ->description(fn ($record) => "Jam: " . $record->created_at?->format('H:i')) // Jam di bawahnya
+                    ->color('gray')
+                    ->sortable(),
             ])
             ->filters([
                 //

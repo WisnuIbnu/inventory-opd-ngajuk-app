@@ -27,6 +27,8 @@ class Barang extends Model
         'kondisi',
         'keterangan',
         'jenis_aset',
+        'created_by',
+        'updated_by',
         'created_at',
         'update_at',
     ];
@@ -40,6 +42,16 @@ class Barang extends Model
     public function getRouteKeyName(): string
     {
         return 'barcode';
+    }
+
+    public function creator()
+    {
+        return $this->belongsTo(\App\Models\User::class, 'created_by');
+    }
+
+    public function editor()
+    {
+        return $this->belongsTo(\App\Models\User::class, 'updated_by');
     }
 
     public function jenisBarang(): BelongsTo 
