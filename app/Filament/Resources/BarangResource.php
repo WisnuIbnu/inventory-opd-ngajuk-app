@@ -309,6 +309,7 @@ public static function table(Table $table): Table
                             echo $pdf->output();
                         }, "stiker-{$record->barcode}.pdf");
                     }),
+                Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
