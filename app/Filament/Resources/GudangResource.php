@@ -3,7 +3,6 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\GudangResource\Pages;
-use App\Filament\Resources\GudangResource\RelationManagers;
 use App\Models\Gudang;
 use Filament\Tables\Actions\DeleteAction;
 use Filament\Forms; 
@@ -14,7 +13,6 @@ use Filament\Tables;
 use Filament\Tables\Actions\DeleteBulkAction;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class GudangResource extends Resource
 {

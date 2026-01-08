@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Dinas extends Model
 {
+    use HasFactory;
     protected $table = 'dinas';
     
     protected $fillable = ['nama_opd'];

@@ -3,7 +3,6 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\BarangResource\Pages;
-use App\Filament\Resources\BarangResource\RelationManagers;
 use App\Models\Barang;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -11,7 +10,6 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Filament\Forms\Get;
 use App\Models\Gudang;
 use App\Models\JenisBarang;
@@ -82,7 +80,10 @@ class BarangResource extends Resource
             Forms\Components\TextInput::make('barcode')
                 ->label('Kode Barang')
                 ->required()
-                ->unique(ignoreRecord: true) 
+                ->unique(ignoreRecord: true)
+                ->validationMessages([
+                    'unique' => 'Kode Barang/Barcode ini sudah terdaftar di sistem. Silakan gunakan kode lain.',
+                    'required' => 'Kode Barang tidak boleh kosong.'])
                 ->disabled(fn ($context) => $context === 'edit')
                 ->dehydrated() 
                 ->placeholder('Masukkan Kode Barang/Barcode manual')
@@ -279,7 +280,7 @@ public static function table(Table $table): Table
                     ->description(fn ($record) => "Waktu: " . ($record->updated_at?->format('d/m/Y H:i') ?? '-'))
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->placeholder('User Dihapus'),
-            ])
+            ])->defaultSort('merk', 'asc')
             ->filters([
                 Tables\Filters\SelectFilter::make('kondisi')
                     ->options([
