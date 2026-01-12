@@ -143,7 +143,34 @@ class BarangResource extends Resource
                 ])->columns(2),
 
 
-                Forms\Components\Section::make('Jenis Aset & Syarat Wajib')
+                Forms\Components\Section::make('Kategori Barang')
+                    ->schema([
+                       Forms\Components\Select::make('kategori_pakai')
+                        ->options([
+                            'habis pakai' => 'Habis Pakai (Stok)',
+                            'tidak habis pakai' => 'Aset Tetap (Non-Stok)',
+                        ])
+                        ->live()
+                        ->required()
+                        ->afterStateUpdated(function (Set $set, $state) {
+                            if ($state === 'tidak habis pakai') {
+                                $set('total_quota', 0);
+                                $set('stock_remaining', 0);
+                            }
+                        }),
+
+                        Forms\Components\TextInput::make('total_quota')
+                            ->label('Total Kuota/Stok Awal')
+                            ->numeric()
+                            ->default(0)
+                            ->visible(fn (Get $get) => $get('kategori_pakai') === 'habis pakai')
+                            ->required(fn (Get $get) => $get('kategori_pakai') === 'habis pakai')
+                            ->afterStateUpdated(fn ($state, Set $set) => $set('stock_remaining', $state)),
+
+                        Forms\Components\Hidden::make('stock_remaining')->default(0),
+                    ])->columns(2),
+
+                    Forms\Components\Section::make('Jenis Aset & Syarat Wajib')
                     ->schema([
                        Forms\Components\Select::make('jenis_aset')
                         ->reactive() 
@@ -296,6 +323,11 @@ public static function table(Table $table): Table
                         'aset tetap' => 'Aset Tetap',
                         'aset ekstrakompatibel' => 'Aset Ekstrakompatibel',
                         'aset barjas' => 'Aset Barjas',
+                    ]),
+                Tables\Filters\SelectFilter::make('kategori_pakai')
+                    ->options([
+                        'habis pakai' => 'Habis Pakai',
+                        'tidak habis pakai' => 'Tidak Habis Pakai'
                     ]),
             ])
             ->actions([

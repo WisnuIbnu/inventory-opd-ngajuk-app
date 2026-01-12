@@ -9,6 +9,8 @@ class KondisiBarangChart extends ChartWidget
 {
     protected static ?string $heading = 'Komposisi Kondisi Barang';
 
+    protected static ?int $sort = 3;
+
     protected function getData(): array
     {
         $role = auth()->user()->role;

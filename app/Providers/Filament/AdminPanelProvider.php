@@ -47,6 +47,12 @@ class AdminPanelProvider extends PanelProvider
             ->widgets([
                 Widgets\AccountWidget::class,
             ])
+            ->navigationGroups([
+                'Manajemen User & Dinas',
+                'Manejemen Transaksi Barang',
+                'Manajemen Barang',
+                'Laporan',
+            ])
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,

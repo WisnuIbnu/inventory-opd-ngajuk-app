@@ -6,6 +6,7 @@ use App\Models\Barang;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 class BarangExport implements FromQuery, WithHeadings, WithMapping
 {
@@ -75,6 +76,13 @@ class BarangExport implements FromQuery, WithHeadings, WithMapping
             number_format($barang->harga, 0, ',', '.'),
             $barang->jenis_aset,
             $barang->created_at->format('d-m-Y'),
+        ];
+    }
+    
+    public function styles(Worksheet $sheet)
+    {
+        return [
+            1    => ['font' => ['bold' => true]],
         ];
     }
 }

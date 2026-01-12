@@ -20,7 +20,7 @@ class Laporan extends Page implements HasForms
 
     protected static ?string $navigationIcon = 'heroicon-o-document-chart-bar';
     protected static ?string $navigationGroup = 'Laporan';
-    protected static ?string $navigationLabel = 'Laporan';
+    protected static ?string $navigationLabel = 'Laporan Barang';
     protected static ?string $title = 'Laporan Inventaris';
     protected static string $view = 'filament.pages.laporan';
 

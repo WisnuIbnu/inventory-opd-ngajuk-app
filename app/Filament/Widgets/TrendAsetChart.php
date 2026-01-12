@@ -12,6 +12,7 @@ class TrendAsetChart extends ChartWidget
 {
     protected static ?string $heading = 'Tren Penambahan Aset';
 
+    protected static ?int $sort = 4;
     public ?string $filter = null;
 
     protected function getFilters(): ?array

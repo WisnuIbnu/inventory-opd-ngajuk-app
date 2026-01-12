@@ -26,6 +26,10 @@ return new class extends Migration
             $table->enum('kondisi', ['baik', 'tidak digunakan', 'rusak ringan', 'rusak berat', 'hibah', 'mutasi']);
             $table->string('keterangan', 150)->nullable();
             $table->enum('jenis_aset',['aset tetap', 'aset ekstrakompatibel', 'aset barjas']);
+            $table->enum('kategori_pakai', ['habis pakai', 'tidak habis pakai'])->default('tidak habis pakai');
+            $table->integer('total_quota')->default(0);
+            $table->integer('total_use')->default(0);
+            $table->integer('stock_remaining')->default(0);
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();

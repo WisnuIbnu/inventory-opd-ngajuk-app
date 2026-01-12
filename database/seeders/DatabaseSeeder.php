@@ -120,7 +120,7 @@ class DatabaseSeeder extends Seeder
                     'jenis_barang_id' => $jenisBarang->id,
                     'merk' => collect($merk)->random(),
                     'register' => 'REG-' . strtoupper(Str::random(10)),
-                    'gambar' => 'barang/01KEBP4GA8PZ859HHZ1KWXCMBY.jpeg',
+                    'gambar' => 'barang/01KER4R2N48610M7XHEPFH3579.png',
                     'tahun' => Carbon::now()->subYears(rand(1, 5)),
                     'barcode' => 'QR-' . strtoupper(Str::random(12)),
                     'penanggung_jawab_id' => $penanggungJawabs->random()->id,

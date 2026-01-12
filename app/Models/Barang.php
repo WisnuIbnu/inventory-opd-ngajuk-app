@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Barang extends Model
 {
@@ -25,6 +26,10 @@ class Barang extends Model
         'kondisi',
         'keterangan',
         'jenis_aset',
+        'kategori_pakai',
+        'total_quota',
+        'total_use',
+        'stock_remaining',
         'created_by',
         'updated_by',
         'created_at',
@@ -34,6 +39,9 @@ class Barang extends Model
     protected $casts = [
         'tahun' => 'date',
         'harga' => 'decimal:2',
+        'total_quota' => 'integer',
+        'total_use' => 'integer',
+        'stock_remaining' => 'integer'
     ];
 
 
@@ -50,6 +58,11 @@ class Barang extends Model
     public function editor()
     {
         return $this->belongsTo(\App\Models\User::class, 'updated_by');
+    }
+
+    public function transactions(): HasMany
+    {
+        return $this->hasMany(Transaction::class, 'barang_id');
     }
 
     public function jenisBarang(): BelongsTo 

@@ -21,7 +21,7 @@ class JenisBarangResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-tag';
     protected static ?string $navigationGroup = 'Manajemen Barang';
 
-        public static function getEloquentQuery(): Builder
+    public static function getEloquentQuery(): Builder
     {
         $query = parent::getEloquentQuery();
         

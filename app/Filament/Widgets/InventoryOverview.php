@@ -10,6 +10,9 @@ use Filament\Widgets\StatsOverviewWidget\Stat;
 class InventoryOverview extends BaseWidget
 {
     protected static ?string $pollingInterval = '15s';
+
+    protected static ?int $sort = 2;
+
     protected function getColumns(): int
     {
         return 2;
