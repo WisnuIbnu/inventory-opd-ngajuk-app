@@ -38,18 +38,35 @@ class Laporan extends Page implements HasForms
                 Section::make('Filter Laporan')
                     ->description('Pilih kriteria laporan yang ingin diexport ke Excel.')
                     ->schema([
+                        // 1. Filter Kategori Laporan (Kondisi)
                         Select::make('kategori')
-                            ->label('Jenis Laporan')
+                            ->label('Jenis Laporan (Kondisi)')
                             ->options([
-                                'semua' => 'Semua Barang',
-                                'rusak berat' => 'Barang Rusak',
-                                'tidak_digunakan' => 'Barang Tidak Digunakan',
+                                'semua' => 'Semua Kondisi',
+                                'baik' => 'Kondisi Baik',
+                                'rusak ringan' => 'Rusak Ringan',
+                                'rusak berat' => 'Rusak Berat',
+                                'tidak digunakan' => 'Barang Tidak Digunakan',
+                                'hibah' => 'Barang Hibah',
+                                'mutasi' => 'Barang Mutasi',
                                 'gudang' => 'Berdasarkan Lokasi Gudang',
                                 'jenis_aset' => 'Berdasarkan Jenis Aset',
                             ])
                             ->live()
                             ->required(),
 
+                        // 2. Filter Kategori Pakai (Habis Pakai / Tidak)
+                        Select::make('kategori_pakai')
+                            ->label('Kategori Penggunaan')
+                            ->options([
+                                'semua' => 'Semua Kategori (Stok & Aset)',
+                                'habis pakai' => 'Barang Habis Pakai (Stok)',
+                                'tidak habis pakai' => 'Aset Tetap (Non-Stok)',
+                            ])
+                            ->default('semua')
+                            ->required(),
+
+                        // 3. Filter Jenis Aset (Hanya muncul jika kategori 'jenis_aset' dipilih)
                         Select::make('jenis_aset')
                             ->label('Pilih Jenis Aset')
                             ->options([
@@ -60,7 +77,8 @@ class Laporan extends Page implements HasForms
                             ->visible(fn ($get) => $get('kategori') === 'jenis_aset')
                             ->required(fn ($get) => $get('kategori') === 'jenis_aset'),
 
-                            Select::make('gudang_id')
+                        // 4. Filter Gudang
+                        Select::make('gudang_id')
                             ->label('Pilih Gudang')
                             ->options(function () {
                                 $query = Gudang::query();
@@ -80,6 +98,7 @@ class Laporan extends Page implements HasForms
                             ->searchable()
                             ->required(fn ($get) => $get('kategori') === 'gudang'),
 
+                        // 5. Filter Rentang Waktu
                         Select::make('rentang')
                             ->label('Rentang Waktu')
                             ->options([
@@ -92,6 +111,8 @@ class Laporan extends Page implements HasForms
 
                         DatePicker::make('bulan')
                             ->label('Pilih Bulan & Tahun')
+                            ->native(false)
+                            ->displayFormat('F Y')
                             ->visible(fn ($get) => $get('rentang') === 'per_bulan')
                             ->required(fn ($get) => $get('rentang') === 'per_bulan'),
 

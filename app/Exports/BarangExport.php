@@ -6,9 +6,11 @@ use App\Models\Barang;
 use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
+use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use Maatwebsite\Excel\Concerns\WithStyles;
 
-class BarangExport implements FromQuery, WithHeadings, WithMapping
+class BarangExport implements FromQuery, WithHeadings, WithMapping, ShouldAutoSize, WithStyles
 {
     protected $filters;
 
@@ -21,7 +23,6 @@ class BarangExport implements FromQuery, WithHeadings, WithMapping
     {
         $query = Barang::query()->with(['dinas', 'gudang', 'jenisBarang']);
 
-        // 1. Logika Filter Dinas (Tetap)
         $role = auth()->user()->role;
         $sessionDinasId = session('admin_dinas_id');
         $userDinasId = auth()->user()->dinas_id;
@@ -32,26 +33,30 @@ class BarangExport implements FromQuery, WithHeadings, WithMapping
             $query->where('dinas_id', $sessionDinasId);
         }
 
-        // 2. Filter Kategori & JENIS ASET (Tambahan)
-        if ($this->filters['kategori'] === 'rusak') {
-            $query->where('kondisi', 'rusak');
-        } elseif ($this->filters['kategori'] === 'tidak_digunakan') {
-            $query->where('kondisi', 'tidak digunakan');
-        } elseif ($this->filters['kategori'] === 'jenis_aset' && !empty($this->filters['jenis_aset'])) {
-            // Ini akan memfilter kolom jenis_aset
+        if (!empty($this->filters['kategori_pakai']) && $this->filters['kategori_pakai'] !== 'semua') {
+            $query->where('kategori_pakai', $this->filters['kategori_pakai']);
+        }
+
+        $kategori = $this->filters['kategori'];
+        $excludedKategori = ['semua', 'gudang', 'jenis_aset'];
+
+        if (!in_array($kategori, $excludedKategori)) {
+            $kondisi = ($kategori === 'tidak_digunakan') ? 'tidak digunakan' : $kategori;
+            $query->where('kondisi', $kondisi);
+        }
+
+        if ($kategori === 'jenis_aset' && !empty($this->filters['jenis_aset'])) {
             $query->where('jenis_aset', $this->filters['jenis_aset']);
         }
 
-        // 3. Filter Gudang (Tetap)
-        if (!empty($this->filters['gudang_id'])) {
+        if ($kategori === 'gudang' && !empty($this->filters['gudang_id'])) {
             $query->where('gudang_id', $this->filters['gudang_id']);
         }
 
-        // 4. Filter Waktu (Kombinasi Otomatis)
-        // Logika ini akan tetap jalan meskipun kategori yang dipilih adalah 'jenis_aset'
         if ($this->filters['rentang'] === 'per_bulan' && !empty($this->filters['bulan'])) {
-            $query->whereMonth('tahun', date('m', strtotime($this->filters['bulan'])))
-                ->whereYear('tahun', date('Y', strtotime($this->filters['bulan'])));
+            $date = strtotime($this->filters['bulan']);
+            $query->whereMonth('tahun', date('m', $date))
+                  ->whereYear('tahun', date('Y', $date));
         } elseif ($this->filters['rentang'] === 'per_tahun' && !empty($this->filters['tahun'])) {
             $query->whereYear('tahun', $this->filters['tahun']);
         }
@@ -61,7 +66,18 @@ class BarangExport implements FromQuery, WithHeadings, WithMapping
 
     public function headings(): array
     {
-        return ['Barcode', 'Nama Barang', 'Merk', 'Kondisi', 'Lokasi Gudang', 'Dinas/OPD', 'Harga', 'Jenis Aset', 'Tanggal Masuk'];
+        return [
+            'Barcode', 
+            'Nama Barang', 
+            'Merk', 
+            'Kategori Penggunaan',
+            'Kondisi', 
+            'Lokasi Gudang', 
+            'Dinas/OPD', 
+            'Harga', 
+            'Jenis Aset', 
+            'Tahun Perolehan'
+        ];
     }
 
     public function map($barang): array
@@ -70,19 +86,20 @@ class BarangExport implements FromQuery, WithHeadings, WithMapping
             $barang->barcode,
             $barang->jenisBarang->nama_jenis ?? '-',
             $barang->merk,
+            ucwords($barang->kategori_pakai), 
             ucfirst($barang->kondisi),
             $barang->gudang->nama_gudang ?? '-',
             $barang->dinas->nama_opd ?? '-',
             number_format($barang->harga, 0, ',', '.'),
             $barang->jenis_aset,
-            $barang->created_at->format('d-m-Y'),
+            date('Y', strtotime($barang->tahun)), 
         ];
     }
     
     public function styles(Worksheet $sheet)
     {
         return [
-            1    => ['font' => ['bold' => true]],
+            1 => ['font' => ['bold' => true]],
         ];
     }
 }
