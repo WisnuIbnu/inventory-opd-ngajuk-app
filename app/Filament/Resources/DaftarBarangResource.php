@@ -66,6 +66,7 @@ class DaftarBarangResource extends Resource
                     ImageColumn::make('gambar')
                         ->height('200px')
                         ->width('100%')
+                        ->visible(fn ($record) => !empty($record->gambar))
                         ->extraImgAttributes(['class' => 'object-cover rounded-t-xl']),
                     
                     Stack::make([
@@ -134,6 +135,7 @@ class DaftarBarangResource extends Resource
                             ->width('100%')
                             ->height('400px')
                             ->columnSpanFull()
+                            ->visible(fn ($record) => !empty($record->gambar))
                             ->extraImgAttributes([
                                 'class' => 'w-full h-auto md:h-[400px] object-cover rounded-lg'
                             ]),

@@ -13,7 +13,7 @@ class ListGudangs extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            Actions\CreateAction::make()->label('Tambah Gudang'),
+            Actions\CreateAction::make()->label('Tambah Lokasi Baru'),
         ];
     }
 }

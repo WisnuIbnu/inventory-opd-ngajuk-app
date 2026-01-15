@@ -96,7 +96,7 @@ class GudangResource extends Resource
                     ->description(fn ($record) => "Jam: " . $record->created_at?->format('H:i'))
                     ->color('gray')
                     ->sortable(),
-            ])
+            ])->defaultSort('created_at', 'desc')
             ->filters([
                 //
             ])

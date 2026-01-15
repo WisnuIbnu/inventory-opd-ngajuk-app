@@ -153,10 +153,15 @@ class TransactionResource extends Resource
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('creator.name')
-                    ->label('Operator')
+                    ->label('Pembuat')
                     ->description(fn ($record) => "Waktu: " . ($record->created_at?->format('d/m/Y H:i') ?? '-'))
                     ->toggleable(isToggledHiddenByDefault: true),
-            ])
+
+                Tables\Columns\TextColumn::make('editor.name')
+                    ->label('Editor')
+                    ->description(fn ($record) => "Waktu: " . ($record->updated_at?->format('d/m/Y H:i') ?? '-'))
+                    ->toggleable(isToggledHiddenByDefault: true),
+            ])->defaultSort('created_at', 'desc')
             ->filters([
                 Tables\Filters\SelectFilter::make('tipe_transaksi')
                     ->label('Filter Tipe')
