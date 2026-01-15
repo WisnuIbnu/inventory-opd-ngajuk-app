@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('jenis_barang_id')->constrained('jenis_barangs')->restrictOnDelete();
             $table->string('merk', 150);
-            $table->string('gambar');
+            $table->string('gambar')->nullable();
             $table->string('register', 150);
             $table->date('tahun');
             $table->string('barcode', 100)->unique();
@@ -23,10 +23,9 @@ return new class extends Migration
             $table->decimal('harga', 15, 2);
             $table->foreignId('gudang_id')->constrained('gudangs')->restrictOnDelete();
             $table->foreignId('dinas_id')->constrained('dinas')->cascadeOnDelete()->restrictOnDelete();
-            $table->enum('kondisi', ['baik', 'tidak digunakan', 'rusak ringan', 'rusak berat', 'hibah', 'mutasi']);
+            $table->enum('kondisi', ['baik', 'tidak digunakan', 'rusak', 'hibah', 'mutasi']);
             $table->string('keterangan', 150)->nullable();
-            $table->enum('jenis_aset',['aset tetap', 'aset ekstrakompatibel', 'aset barjas']);
-            $table->enum('kategori_pakai', ['habis pakai', 'tidak habis pakai'])->default('tidak habis pakai');
+            $table->enum('jenis_aset',['aset tetap', 'aset ekstrakompatibel', 'aset barjas', 'penghapusan', 'habis pakai']);
             $table->integer('total_quota')->default(0);
             $table->integer('total_use')->default(0);
             $table->integer('stock_remaining')->default(0);

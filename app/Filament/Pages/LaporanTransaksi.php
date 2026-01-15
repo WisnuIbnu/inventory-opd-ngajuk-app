@@ -20,7 +20,7 @@ class LaporanTransaksi extends Page implements HasForms
     protected static ?string $navigationIcon = 'heroicon-o-document-duplicate';
     protected static ?string $navigationGroup = 'Laporan';
     protected static ?string $navigationLabel = 'Laporan Transaksi';
-    protected static ?string $title = 'Laporan Transaksi Barang Habis Pakai';
+    protected static ?string $title = 'Laporan Transaksi (Masuk/Keluar)';
     protected static string $view = 'filament.pages.laporan-transaksi';
 
     public ?array $data = [];
@@ -50,11 +50,9 @@ class LaporanTransaksi extends Page implements HasForms
                         Select::make('tahun')
                             ->label('Pilih Tahun')
                             ->options(function () {
-                                return Transaction::query()
-                                    ->selectRaw('YEAR(created_at) as year')
-                                    ->distinct()
-                                    ->orderBy('year', 'desc')
-                                    ->pluck('year', 'year');
+                                $currentYear = date('Y');
+                                $years = range($currentYear, 1960);
+                                return array_combine($years, $years);
                             })
                             ->visible(fn ($get) => $get('rentang') === 'per_tahun' || $get('rentang') === 'per_bulan')
                             ->required(fn ($get) => $get('rentang') === 'per_tahun' || $get('rentang') === 'per_bulan'),
@@ -78,7 +76,7 @@ class LaporanTransaksi extends Page implements HasForms
     {
         return [
             Action::make('export')
-                ->label('Download Excel Transaksi')
+                ->label('Download Laporan Transaksi')
                 ->icon('heroicon-m-arrow-down-tray')    
                 ->action('exportExcel'),
         ];

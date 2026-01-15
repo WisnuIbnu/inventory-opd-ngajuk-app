@@ -15,7 +15,7 @@ class Transaction extends Model
         'jumlah_pakai',
         'penerima',
         'keperluan',
-        'bukti_gambar',
+        'tipe_transaksi',
         'created_by',
         'updated_by',
     ];

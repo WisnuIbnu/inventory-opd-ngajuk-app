@@ -26,7 +26,6 @@ class Barang extends Model
         'kondisi',
         'keterangan',
         'jenis_aset',
-        'kategori_pakai',
         'total_quota',
         'total_use',
         'stock_remaining',

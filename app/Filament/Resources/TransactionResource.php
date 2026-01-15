@@ -3,7 +3,6 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\TransactionResource\Pages;
-use App\Filament\Resources\TransactionResource\RelationManagers;
 use App\Models\Barang;
 use App\Models\Transaction;
 use Filament\Forms;
@@ -14,7 +13,6 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class TransactionResource extends Resource
 {
@@ -30,7 +28,7 @@ class TransactionResource extends Resource
         $sessionDinasId = session('admin_dinas_id');
         $userDinasId = auth()->user()->dinas_id;
 
-       if (auth()->user()->role === 'OPD') {
+        if (auth()->user()->role === 'OPD') {
             return $query->whereHas('barang', fn($q) => $q->where('dinas_id', $userDinasId));
         }
 
@@ -45,65 +43,72 @@ class TransactionResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\Section::make('Detail Transaksi')
+                Forms\Components\Section::make('Detail Transaksi Stok')
+                    ->description('Catat penambahan atau penggunaan barang habis pakai.')
                     ->schema([
+                        Forms\Components\Select::make('tipe_transaksi')
+                            ->label('Jenis Transaksi')
+                            ->options([
+                                'masuk' => 'Stok Masuk (Penambahan)',
+                                'keluar' => 'Stok Keluar (Penggunaan)',
+                            ])
+                            ->required()
+                            ->live()
+                            ->native(false)
+                            ->default('keluar'),
+                            
                         Forms\Components\Select::make('barang_id')
                             ->label('Pilih Barang')
                             ->options(function () {
-                                // Hanya menampilkan barang kategori 'habis pakai' yang stoknya > 0
                                 return Barang::query()
-                                    ->where('kategori_pakai', 'habis pakai')
+                                    ->where('jenis_aset', 'habis pakai')
                                     ->where('stock_remaining', '>', 0)
                                     ->pluck('merk', 'id');
+
                             })
                             ->searchable()
                             ->preload()
                             ->required()
                             ->live()
-                            // Reset jumlah pakai jika barang diganti
                             ->afterStateUpdated(fn (Set $set) => $set('jumlah_pakai', 1)),
 
                         Forms\Components\TextInput::make('jumlah_pakai')
-                            ->label('Jumlah yang Diambil')
+                            ->label(fn (Get $get) => $get('tipe_transaksi') === 'masuk' ? 'Jumlah Masuk' : 'Jumlah Keluar')
                             ->numeric()
                             ->default(1)
                             ->minValue(1)
                             ->required()
-                           ->maxValue(function (Get $get, $record) {
-                                $barang = \App\Models\Barang::find($get('barang_id'));
+                            ->maxValue(function (Get $get, $record) {
+                                if ($get('tipe_transaksi') === 'masuk') return null;
+
+                                $barang = Barang::find($get('barang_id'));
                                 if (!$barang) return 0;
 
-                                $stokTersediaSekarang = $barang->stock_remaining;
-                                $jumlahLama = $record ? $record->jumlah_pakai : 0;
+                                $stokTersedia = $barang->stock_remaining;
+                                $jumlahLama = $record ? $record->jumlah : 0;
 
-                                return $stokTersediaSekarang + $jumlahLama;
+                                return $stokTersedia + $jumlahLama;
                             })
                             ->validationMessages([
-                                'maxValue' => 'Maaf, stok tidak mencukupi! Sisa stok hanya ada :value unit.',
+                                'maxValue' => 'Stok tidak mencukupi! Sisa stok tersedia: :value unit.',
                             ])
                             ->helperText(function (Get $get) {
                                 $barangId = $get('barang_id');
-                                if (!$barangId) return 'Pilih barang terlebih dahulu.';
+                                if (!$barangId) return 'Pilih barang untuk melihat stok.';
+                                
                                 $stok = Barang::find($barangId)?->stock_remaining ?? 0;
-                                return "Stok tersedia saat ini: {$stok}";
+                                return "Sisa stok saat ini di gudang: {$stok} unit.";
                             }),
 
                         Forms\Components\TextInput::make('penerima')
-                            ->label('Nama Penerima / Pengambil')
+                            ->label(fn (Get $get) => $get('tipe_transaksi') === 'masuk' ? 'Nama Penyerah/Vendor' : 'Nama Penerima/Pegawai')
+                            ->placeholder('Masukkan nama orang terkait...')
                             ->required()
                             ->maxLength(255),
 
-                        Forms\Components\FileUpload::make('bukti_gambar')
-                            ->label('Foto Bukti Pengambilan')
-                            ->image()
-                            ->disk('public')
-                            ->directory('transaksi-bukti')
-                            ->maxSize(200) // Maksimal 1MB
-                            ->required(),
-
                         Forms\Components\Textarea::make('keperluan')
-                            ->label('Keperluan Penggunaan')
-                            ->placeholder('Contoh: Untuk kegiatan rapat koordinasi dinas...')
+                            ->label('Keterangan / Keperluan')
+                            ->placeholder(fn (Get $get) => $get('tipe_transaksi') === 'masuk' ? 'Contoh: Pengadaan rutin bulanan...' : 'Contoh: Untuk operasional bidang sekretariat...')
                             ->required()
                             ->columnSpanFull(),
                     ])->columns(2),
@@ -114,41 +119,51 @@ class TransactionResource extends Resource
     {
         return $table
             ->columns([
+                Tables\Columns\TextColumn::make('tipe_transaksi')
+                    ->label('Tipe')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'masuk' => 'success',
+                        'keluar' => 'danger',
+                    })
+                    ->formatStateUsing(fn (string $state): string => ucfirst($state)),
+
                 Tables\Columns\TextColumn::make('barang.merk')
-                    ->label('Barang')
+                    ->label('Nama Barang')
                     ->searchable()
                     ->sortable(),
 
+                    Tables\Columns\TextColumn::make('barang.stock_remaining')
+                    ->label('Sisa Stok'),
+
                 Tables\Columns\TextColumn::make('jumlah_pakai')
                     ->label('Jumlah')
+                    ->weight('bold')
+                    ->formatStateUsing(fn ($record, $state) => $record->tipe_transaksi === 'masuk' ? "+{$state}" : "-{$state}")
+                    ->color(fn ($record) => $record->tipe_transaksi === 'masuk' ? 'success' : 'danger')
                     ->alignCenter(),
 
                 Tables\Columns\TextColumn::make('penerima')
-                    ->label('Penerima')
+                    ->label('Pihak Terkait')
                     ->searchable(),
 
-                Tables\Columns\ImageColumn::make('bukti_gambar')
-                    ->label('Bukti')
-                    ->square(),
-
-                Tables\Columns\TextColumn::make('creator.name')
-                    ->label('Petugas Input')
+                Tables\Columns\TextColumn::make('created_at')
+                    ->label('Tanggal')
+                    ->dateTime('d/m/Y H:i')
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('creator.name')
-                    ->label('Staff Pembuat')
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true)
-                    ->description(fn ($record) => "Waktu: " . ($record->created_at?->format('d/m/Y H:i') ?? '-')),
-
-                Tables\Columns\TextColumn::make('editor.name')
-                    ->label('Staff Edit')
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true)
-                    ->description(fn ($record) => "Waktu: " . ($record->updated_at?->format('d/m/Y H:i') ?? '-')),
+                    ->label('Operator')
+                    ->description(fn ($record) => "Waktu: " . ($record->created_at?->format('d/m/Y H:i') ?? '-'))
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                Tables\Filters\SelectFilter::make('tipe_transaksi')
+                    ->label('Filter Tipe')
+                    ->options([
+                        'masuk' => 'Masuk',
+                        'keluar' => 'Keluar',
+                    ]),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
@@ -159,13 +174,6 @@ class TransactionResource extends Resource
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ]);
-    }
-
-    public static function getRelations(): array
-    {
-        return [
-            //
-        ];
     }
 
     public static function getPages(): array

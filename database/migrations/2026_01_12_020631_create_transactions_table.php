@@ -14,10 +14,10 @@ return new class extends Migration
         Schema::create('transactions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('barang_id')->constrained('barangs')->cascadeOnDelete();
+            $table->enum('tipe_transaksi', ['masuk', 'keluar'])->default('keluar');
             $table->integer('jumlah_pakai');
             $table->string('penerima')->nullable(); 
             $table->text('keperluan')->nullable();
-            $table->string('bukti_gambar');
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();

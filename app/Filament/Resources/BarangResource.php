@@ -16,6 +16,7 @@ use App\Models\JenisBarang;
 use App\Models\PenanggungJawab;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Filament\Forms\Set;
+use Filament\Notifications\Notification;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class BarangResource extends Resource
@@ -27,19 +28,19 @@ class BarangResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()
-        ->with(['creator', 'editor', 'dinas', 'jenisBarang']);
+        $query = parent::getEloquentQuery()
+            ->with(['creator', 'editor', 'dinas', 'jenisBarang']);
 
-        if (auth()->user()->role === 'OPD') {
-            return $query->where('barangs.dinas_id', auth()->user()->dinas_id);
+        $role = auth()->user()->role;
+        $userDinasId = auth()->user()->dinas_id;
+        $sessionDinasId = session('admin_dinas_id');
+
+        if ($role === 'OPD') {
+            return $query->where('barangs.dinas_id', $userDinasId);
         }
 
-        if (auth()->user()->role === 'Admin') {
-            $sessionDinasId = session('admin_dinas_id');
-            
-            if ($sessionDinasId) {
-                return $query->where('barangs.dinas_id', $sessionDinasId);
-            }
+        if ($role === 'Admin' && $sessionDinasId) {
+            return $query->where('barangs.dinas_id', $sessionDinasId);
         }
 
         return $query;
@@ -55,10 +56,20 @@ class BarangResource extends Resource
                             ->relationship('dinas', 'nama_opd')
                             ->label('Pilih OPD/Dinas')
                             ->required()
-                            ->live() 
-                            ->default(auth()->user()->dinas_id)
-                            ->disabled(auth()->user()->role === 'OPD')
-                            ->dehydrated(), 
+                            ->live()
+                            ->default(function () {
+                                $sessionDinasId = session('admin_dinas_id');
+                                if (auth()->user()->role === 'Admin' && $sessionDinasId) {
+                                    return $sessionDinasId;
+                                }
+                                return auth()->user()->dinas_id;
+                            })
+                            ->disabled(function () {
+                                return auth()->user()->role === 'OPD' || session('admin_dinas_id');
+                            })
+                            ->dehydrated() 
+                            ->searchable()
+                            ->preload(), 
                     ]),
 
                 Forms\Components\Section::make('Detail Barang')
@@ -104,8 +115,7 @@ class BarangResource extends Resource
                     ->options([
                         'baik' => 'Baik',
                         'tidak digunakan' => 'Tidak Digunakan',
-                        'rusak ringan' => 'Rusak Ringan',
-                        'rusak berat' => 'Rusak Berat',
+                        'rusak' => 'Rusak',
                         'mutasi' => 'Mutasi',
                         'hibah' => 'Hibah',
                     ])
@@ -133,81 +143,68 @@ class BarangResource extends Resource
                 Forms\Components\FileUpload::make('gambar')
                     ->label('Foto Barang')
                     ->image()
+                    ->extraInputAttributes([
+                        'capture' => 'environment'
+                    ])
                     ->disk('public')
                     ->directory('barang')
-                    ->maxSize(200)
-                    ->required()
-                    ->validationMessages([
-                        'max' => 'Ukuran file terlalu besar, maksimal 200 KB.',
-                    ])
                 ])->columns(2),
 
-
-                Forms\Components\Section::make('Kategori Barang')
+                Forms\Components\Section::make('Jenis Aset & Stok Barang (Habis Pakai)')
                     ->schema([
-                       Forms\Components\Select::make('kategori_pakai')
-                        ->options([
-                            'habis pakai' => 'Habis Pakai (Stok)',
-                            'tidak habis pakai' => 'Aset Tetap (Non-Stok)',
-                        ])
-                        ->live()
-                        ->required()
-                        ->afterStateUpdated(function (Set $set, $state) {
-                            if ($state === 'tidak habis pakai') {
-                                $set('total_quota', 0);
-                                $set('stock_remaining', 0);
-                            }
-                        }),
-
-                        Forms\Components\TextInput::make('total_quota')
-                            ->label('Total Kuota/Stok Awal')
-                            ->numeric()
-                            ->default(0)
-                            ->visible(fn (Get $get) => $get('kategori_pakai') === 'habis pakai')
-                            ->required(fn (Get $get) => $get('kategori_pakai') === 'habis pakai')
-                            ->afterStateUpdated(fn ($state, Set $set) => $set('stock_remaining', $state)),
-
-                        Forms\Components\Hidden::make('stock_remaining')->default(0),
-                    ])->columns(2),
-
-                    Forms\Components\Section::make('Jenis Aset & Syarat Wajib')
-                    ->schema([
-                       Forms\Components\Select::make('jenis_aset')
-                        ->reactive() 
-                        ->required()
-                        ->options([
-                            'aset tetap' => 'Aset Tetap',
-                            'aset ekstrakompatibel' => 'Aset Ekstrakompatibel',
-                            'aset barjas' => 'Aset Barjas',
-                        ])
-                        ->afterStateUpdated(function ($state, Set $set) {
-                            $set('info_jenis_aset', match ($state) {
-                                'aset tetap' =>
-                                    "Aset berwujud yang digunakan lebih dari 12 bulan dan dicatat dalam neraca.\nContoh: kendaraan, gedung, komputer.",
-                                'aset ekstrakompatibel' =>
-                                    "Barang milik instansi yang tidak dicatat dalam neraca.\nContoh: ATK, buku, perlengkapan habis pakai.",
-                                'aset barjas' =>
-                                    "Barang dan/atau jasa hasil pengadaan.\nDapat menghasilkan aset tetap atau barang habis pakai.",
-                                default => '',
-                            });
-                        }),
-
+                        Forms\Components\Select::make('jenis_aset')
+                            ->label('Jenis Aset')
+                            ->options([
+                                'aset tetap' => 'Aset Tetap',
+                                'aset ekstrakompatibel' => 'Aset Ekstrakompatibel',
+                                'aset barjas' => 'Aset Barjas',
+                                'penghapusan' => 'Penghapusan',
+                                'habis pakai' => 'Habis Pakai (Stok)',
+                            ])
+                            ->required()
+                            ->live()
+                            ->afterStateUpdated(function ($state, Set $set) {
+                                if ($state !== 'habis pakai') {
+                                    $set('total_quota', 0);
+                                    $set('stock_remaining', 0);
+                                }
+                            }),
 
                         Forms\Components\Placeholder::make('info_jenis_aset')
-                            ->label('Syarat Wajib Terpenuhi Setiap Jenis Aset')
+                            ->label('Keterangan Klasifikasi')
                             ->content(fn (Get $get) => match ($get('jenis_aset')) {
-                                'aset tetap' => "Aset berwujud yang digunakan lebih dari 12 bulan dan dicatat dalam neraca.\nContoh: kendaraan, gedung, komputer.",
-                                'aset ekstrakompatibel' => "Barang milik instansi yang tidak dicatat dalam neraca.\nContoh: ATK, buku, perlengkapan habis pakai.",
-                                'aset barjas' => "Barang dan/atau jasa hasil pengadaan.\nDapat menghasilkan aset tetap atau barang habis pakai.",
-                                default => '-',
-                            })
+                                'aset tetap' => "Aset berwujud > 12 bulan (Kendaraan, Gedung, Komputer).",
+                                'aset ekstrakompatibel' => "Barang instansi tidak dicatat dalam neraca.",
+                                'aset barjas' => "Barang/Jasa hasil pengadaan pemerintah.",
+                                'habis pakai' => "Barang operasional yang akan dikelola stoknya (Inventory).",
+                                'penghapusan' => "Aset yang sedang dalam proses lelang/pemusnahan.",
+                                default => 'Silakan pilih jenis aset...',
+                            }),
+
+                        Forms\Components\TextInput::make('total_quota')
+                            ->label('Total Kuota Awal')
+                            ->numeric()
+                            ->default(0)
+                            ->disabled(fn (string $context) => $context === 'edit')
+                            ->visible(fn (Get $get) => $get('jenis_aset') === 'habis pakai')
+                            ->required(fn (Get $get) => $get('jenis_aset') === 'habis pakai')
+                            ->live()
+                            ->afterStateUpdated(fn ($state, Set $set) => $set('stock_remaining', $state)),
+
+                        Forms\Components\TextInput::make('stock_remaining')
+                            ->label('Sisa Stok Saat Ini')
+                            ->numeric()
+                            ->disabled()
+                            ->dehydrated() 
+                            ->visible(fn (Get $get) => $get('jenis_aset') === 'habis pakai'),
+
                     ])->columns(2),
                     
                 
                     Forms\Components\Section::make('Lokasi & Penanggung Jawab')
                     ->schema([
                         Forms\Components\Select::make('gudang_id')
-                            ->label('Lokasi Gudang')
+                            ->label('Lokasi')
                             ->required()
                             ->options(function (Get $get) {
                                 $dinasId = $get('dinas_id');
@@ -270,8 +267,26 @@ public static function table(Table $table): Table
                 Tables\Columns\TextColumn::make('harga')
                     ->money('IDR')
                     ->sortable(),
+                
+                Tables\Columns\TextColumn::make('stock_remaining')
+                    ->label('Sisa Stok')
+                    ->badge()
+                    ->formatStateUsing(function ($state, $record) {
+                        if ($record->jenis_aset !== 'habis pakai') {
+                            return 'Tanpa Stok';
+                        }
 
-                    Tables\Columns\TextColumn::make('jenis_aset')
+                        return $state . ' Unit';
+                    })
+                    ->color(function ($state, $record) {
+                        if ($record->jenis_aset !== 'habis pakai') {
+                            return 'gray';
+                        }
+                        
+                        return $state > 10 ? 'success' : ($state > 0 ? 'warning' : 'danger');
+                    }),
+
+                Tables\Columns\TextColumn::make('jenis_aset')
                     ->searchable(),
 
                 Tables\Columns\ImageColumn::make('gambar')
@@ -313,8 +328,7 @@ public static function table(Table $table): Table
                     ->options([
                         'baik' => 'Baik',
                         'tidak digunakan' => 'Tidak Digunakan',
-                        'rusak ringan' => 'Rusak Ringan',
-                        'rusak berat' => 'Rusak Berat',
+                        'rusak' => 'Rusak',
                         'hibah' => 'Hibah',
                         'mutasi' => 'Mutasi',
                     ]),
@@ -323,11 +337,8 @@ public static function table(Table $table): Table
                         'aset tetap' => 'Aset Tetap',
                         'aset ekstrakompatibel' => 'Aset Ekstrakompatibel',
                         'aset barjas' => 'Aset Barjas',
-                    ]),
-                Tables\Filters\SelectFilter::make('kategori_pakai')
-                    ->options([
+                        'penghapusan' => 'Penghapusan',
                         'habis pakai' => 'Habis Pakai',
-                        'tidak habis pakai' => 'Tidak Habis Pakai'
                     ]),
             ])
             ->actions([

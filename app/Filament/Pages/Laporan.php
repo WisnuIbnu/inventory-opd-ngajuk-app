@@ -38,46 +38,36 @@ class Laporan extends Page implements HasForms
                 Section::make('Filter Laporan')
                     ->description('Pilih kriteria laporan yang ingin diexport ke Excel.')
                     ->schema([
-                        // 1. Filter Kategori Laporan (Kondisi)
+                            // 1. Filter Kategori Laporan
                         Select::make('kategori')
-                            ->label('Jenis Laporan (Kondisi)')
+                            ->label('Jenis Laporan Inventaris')
                             ->options([
-                                'semua' => 'Semua Kondisi',
-                                'baik' => 'Kondisi Baik',
-                                'rusak ringan' => 'Rusak Ringan',
-                                'rusak berat' => 'Rusak Berat',
+                                'semua' => 'Semua Barang',
+                                'baik' => 'Barang Baik',
+                                'rusak' => 'Barang Rusak',
                                 'tidak digunakan' => 'Barang Tidak Digunakan',
                                 'hibah' => 'Barang Hibah',
                                 'mutasi' => 'Barang Mutasi',
-                                'gudang' => 'Berdasarkan Lokasi Gudang',
-                                'jenis_aset' => 'Berdasarkan Jenis Aset',
+                                'gudang' => 'Barang Berdasarkan Lokasi Gudang',
+                                'jenis_aset' => 'Barang Berdasarkan Jenis Aset',
                             ])
                             ->live()
                             ->required(),
 
-                        // 2. Filter Kategori Pakai (Habis Pakai / Tidak)
-                        Select::make('kategori_pakai')
-                            ->label('Kategori Penggunaan')
-                            ->options([
-                                'semua' => 'Semua Kategori (Stok & Aset)',
-                                'habis pakai' => 'Barang Habis Pakai (Stok)',
-                                'tidak habis pakai' => 'Aset Tetap (Non-Stok)',
-                            ])
-                            ->default('semua')
-                            ->required(),
-
-                        // 3. Filter Jenis Aset (Hanya muncul jika kategori 'jenis_aset' dipilih)
+                        // 2. Filter Jenis Aset
                         Select::make('jenis_aset')
                             ->label('Pilih Jenis Aset')
                             ->options([
                                 'aset tetap' => 'Aset Tetap',
                                 'aset ekstrakompatibel' => 'Aset Ekstrakompatibel',
                                 'aset barjas' => 'Aset Barjas',
+                                'penghapusan' => 'Penghapusan',
+                                'habis pakai' => 'Habis Pakai',
                             ])
                             ->visible(fn ($get) => $get('kategori') === 'jenis_aset')
                             ->required(fn ($get) => $get('kategori') === 'jenis_aset'),
 
-                        // 4. Filter Gudang
+                        // 3. Filter Gudang
                         Select::make('gudang_id')
                             ->label('Pilih Gudang')
                             ->options(function () {
@@ -98,7 +88,7 @@ class Laporan extends Page implements HasForms
                             ->searchable()
                             ->required(fn ($get) => $get('kategori') === 'gudang'),
 
-                        // 5. Filter Rentang Waktu
+                        // 4. Filter Rentang Waktu
                         Select::make('rentang')
                             ->label('Rentang Waktu')
                             ->options([
@@ -108,7 +98,8 @@ class Laporan extends Page implements HasForms
                             ])
                             ->live()
                             ->required(),
-
+                        
+                        
                         DatePicker::make('bulan')
                             ->label('Pilih Bulan & Tahun')
                             ->native(false)
@@ -119,7 +110,8 @@ class Laporan extends Page implements HasForms
                         Select::make('tahun')
                             ->label('Pilih Tahun')
                             ->options(function() {
-                                $years = range(date('Y'), 2020);
+                                $currentYear = date('Y');
+                                $years = range($currentYear, 1960);
                                 return array_combine($years, $years);
                             })
                             ->visible(fn ($get) => $get('rentang') === 'per_tahun')
@@ -133,7 +125,7 @@ class Laporan extends Page implements HasForms
     {
         return [
             Action::make('export')
-                ->label('Download Excel')
+                ->label('Download Laporan Inventaris')
                 ->icon('heroicon-m-arrow-down-tray')    
                 ->action('exportExcel'),
         ];

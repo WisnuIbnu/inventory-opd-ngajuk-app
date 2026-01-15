@@ -11,7 +11,8 @@ use Filament\Tables\Columns\Layout\Stack;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Model;   
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Validation\Rules\In;
 
 class DaftarBarangResource extends Resource
 {
@@ -101,8 +102,7 @@ class DaftarBarangResource extends Resource
                  ->options([
                         'baik' => 'Baik',
                         'tidak digunakan' => 'Tidak Digunakan',
-                        'rusak ringan' => 'Rusak Ringan',
-                        'rusak berat' => 'Rusak Berat',
+                        'rusak' => 'Rusak',
                         'hibah' => 'Hibah',
                         'mutasi' => 'Mutasi',
                     ]),
@@ -115,6 +115,8 @@ class DaftarBarangResource extends Resource
                         'aset tetap' => 'Aset Tetap',
                         'aset ekstrakompatibel' => 'Aset Ekstrakompatibel',
                         'aset barjas' => 'Aset Barjas',
+                        'penghapusan' => 'Penghapusan',
+                        'habis pakai' => 'Habis Pakai',
                     ]),
                 
             ])
@@ -155,6 +157,9 @@ class DaftarBarangResource extends Resource
                             'aset barjas' => 'Aset Barang & Jasa',
                             default => $state,
                         }),
+                        Infolists\Components\TextEntry::make('stock_remaining')
+                            ->label('Sisa Stok Saat Ini')
+                            ->visible(fn ($record) => $record?->jenis_aset === 'habis pakai'),
                         Infolists\Components\ImageEntry::make('qr_visual')
                                 ->label('Kode QR')
                                 ->getStateUsing(function ($record) {

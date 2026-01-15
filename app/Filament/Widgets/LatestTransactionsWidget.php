@@ -35,15 +35,25 @@ class LatestTransactionsWidget extends BaseWidget
             )
             ->columns([
 
+                Tables\Columns\TextColumn::make('tipe_transaksi')
+                    ->label('Tipe')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'masuk' => 'success',
+                        'keluar' => 'danger',
+                    })
+                    ->formatStateUsing(fn (string $state): string => ucfirst($state)),
+
                 Tables\Columns\TextColumn::make('barang.merk')
                     ->label('Nama Barang')
                     ->description(fn (Transaction $record): string => "Penerima: {$record->penerima}"),
 
                 Tables\Columns\TextColumn::make('jumlah_pakai')
                     ->label('Jumlah')
-                    ->formatStateUsing(fn ($state) => "- {$state}")
-                    ->badge()
-                    ->color('danger'),
+                    ->weight('bold')
+                    ->formatStateUsing(fn ($record, $state) => $record->tipe_transaksi === 'masuk' ? "+{$state}" : "-{$state}")
+                    ->color(fn ($record) => $record->tipe_transaksi === 'masuk' ? 'success' : 'danger')
+                    ->alignCenter(),
 
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Waktu')
@@ -69,9 +79,10 @@ class LatestTransactionsWidget extends BaseWidget
                                             ->weight('bold'),
                                             
                                         \Filament\Infolists\Components\TextEntry::make('jumlah_pakai')
-                                            ->label('Jumlah Diambil')
-                                            ->badge()
-                                            ->color('danger'),
+                                            ->label('Jumlah Keluar/Masuk')
+                                            ->weight('bold')
+                                            ->formatStateUsing(fn ($record, $state) => $record->tipe_transaksi === 'masuk' ? "+{$state}" : "-{$state}")
+                                            ->color(fn ($record) => $record->tipe_transaksi === 'masuk' ? 'success' : 'danger'),
                                             
                                         \Filament\Infolists\Components\TextEntry::make('penerima')
                                             ->label('Nama Penerima'),

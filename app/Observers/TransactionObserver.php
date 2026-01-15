@@ -13,13 +13,16 @@ class TransactionObserver
     {
         $barang = $transaction->barang;
 
-        if ($barang->kategori_pakai === 'habis pakai') {
-
-            $barang->total_use += $transaction->jumlah_pakai;
-            
-            $barang->stock_remaining = $barang->total_quota - $barang->total_use;
-            
-            $barang->save();
+        if ($barang && $barang->jenis_aset === 'habis pakai') {
+            if ($transaction->tipe_transaksi === 'masuk') {
+                // Jika stok masuk: tambah kuota dan sisa stok
+                $barang->increment('total_quota', $transaction->jumlah_pakai);
+                $barang->increment('stock_remaining', $transaction->jumlah_pakai);
+            } else {
+                // Jika stok keluar: tambah pemakaian dan kurangi sisa stok
+                $barang->increment('total_use', $transaction->jumlah_pakai);
+                $barang->decrement('stock_remaining', $transaction->jumlah_pakai);
+            }
         }
     }
 
@@ -30,12 +33,32 @@ class TransactionObserver
     {
         $barang = $transaction->barang;
 
-        if ($barang && $barang->kategori_pakai === 'habis pakai') {
+        if ($barang && $barang->jenis_aset === 'habis pakai') {
             
-            $selisih = $transaction->jumlah_pakai - $transaction->getOriginal('jumlah_pakai');
+            $oldJumlah = $transaction->getOriginal('jumlah_pakai');
+            $oldTipe = $transaction->getOriginal('tipe_transaksi');
 
-            $barang->total_use += $selisih;
-            $barang->stock_remaining = $barang->total_quota - $barang->total_use;
+            $newJumlah = $transaction->jumlah_pakai;
+            $newTipe = $transaction->tipe_transaksi;
+
+            // --- LANGKAH A: BATALKAN EFEK DATA LAMA ---
+            if ($oldTipe === 'masuk') {
+                $barang->total_quota -= $oldJumlah;
+                $barang->stock_remaining -= $oldJumlah;
+            } else {
+                $barang->total_use -= $oldJumlah;
+                $barang->stock_remaining += $oldJumlah;
+            }
+
+            // --- LANGKAH B: TERAPKAN EFEK DATA BARU ---
+            if ($newTipe === 'masuk') {
+                $barang->total_quota += $newJumlah;
+                $barang->stock_remaining += $newJumlah;
+            } else {
+                $barang->total_use += $newJumlah;
+                $barang->stock_remaining -= $newJumlah;
+            }
+
             $barang->save();
         }
     }
@@ -47,11 +70,14 @@ class TransactionObserver
     {
         $barang = $transaction->barang;
 
-        if ($barang && $barang->kategori_pakai === 'habis pakai') {
-            $barang->total_use -= $transaction->jumlah_pakai;
-
-            $barang->stock_remaining = $barang->total_quota - $barang->total_use;
-            $barang->save();
+        if ($barang && $barang->jenis_aset === 'habis pakai') {
+            if ($transaction->tipe_transaksi === 'masuk') {
+                $barang->decrement('total_quota', $transaction->jumlah_pakai);
+                $barang->decrement('stock_remaining', $transaction->jumlah_pakai);
+            } else {
+                $barang->decrement('total_use', $transaction->jumlah_pakai);
+                $barang->increment('stock_remaining', $transaction->jumlah_pakai);
+            }
         }
     }
 

@@ -26,6 +26,8 @@ class DatabaseSeeder extends Seeder
             'Televisi' => ['Samsung 43 Inch UHD', 'LG Smart TV 42 Inch'],
             'Kamera' => ['Canon EOS 600D', 'Nikon D3500'],
             'Sound System' => ['Polytron PAS 8', 'Advance M180'],
+            'Pulpen' => ['Snowman Boardmarker', 'Pilot Hi-Tec-C', 'Standard AE7'],
+            'Buku' => ['Sinar Dunia A4', 'Buku Kas Paperline', 'Buku Agenda Pemkab'],
         ];
 
         // DATA DUMMY
@@ -62,7 +64,6 @@ class DatabaseSeeder extends Seeder
         foreach ($dinasList as $index => $namaDinas) {
             $dinas = Dinas::create(['nama_opd' => $namaDinas]);
 
-            // USER OPD (Simpan ke variabel agar bisa dipakai di Barang::create)
             $userOPD = User::create([
                 'name' => 'Operator ' . $namaDinas,
                 'email' => 'opd' . ($index + 1) . '@nganjukkab.test',
@@ -73,7 +74,7 @@ class DatabaseSeeder extends Seeder
 
             // GUDANG
             $gudangs = collect();
-            foreach (collect($namaGudangList)->random(5) as $namaGudang) {
+            foreach (collect($namaGudangList)->random(3) as $namaGudang) {
                 $gudangs->push(Gudang::create([
                     'nama_gudang' => $namaGudang . ' ' . $namaDinas,
                     'dinas_id' => $dinas->id,
@@ -82,7 +83,7 @@ class DatabaseSeeder extends Seeder
 
             // PENANGGUNG JAWAB
             $penanggungJawabs = collect();
-            foreach (collect($namaPenanggungJawabList)->random(5) as $namaPJ) {
+            foreach (collect($namaPenanggungJawabList)->random(3) as $namaPJ) {
                 $penanggungJawabs->push(PenanggungJawab::create([
                     'nama' => $namaPJ,
                     'dinas_id' => $dinas->id,
@@ -108,12 +109,18 @@ class DatabaseSeeder extends Seeder
                 $createdAt = Carbon::now()->subYears(rand(0, 5))->subDays(rand(0, 365));
                 $updatedAt = (clone $createdAt)->addDays(rand(0, 30));
 
-                $kondisiPilihan = ['baik', 'tidak digunakan', 'rusak ringan', 'rusak berat', 'hibah', 'mutasi'][rand(0, 5)];
-                $jenisAsetPilihan = ['aset tetap', 'aset ekstrakompatibel', 'aset barjas'][rand(0, 2)];
+                $kondisiPilihan = ['baik', 'tidak digunakan', 'rusak', 'hibah', 'mutasi'][rand(0, 4)];
+                $jenisAsetPilihan = ['aset tetap', 'aset ekstrakompatibel', 'aset barjas', 'penghapusan', 'habis pakai'][rand(0, 4)];
 
-                $keterangan = null;
-                if ($kondisiPilihan === 'mutasi') {
-                    $keterangan = 'Dimutasi ke Dinas terkait pada ' . now()->format('d/m/Y');
+                // LOGIKA STOK BARANG HABIS PAKAI
+                $quota = 0;
+                $remaining = 0;
+                $harga = rand(1000000, 20000000);
+
+                if ($jenisAsetPilihan === 'habis pakai') {
+                    $quota = rand(50, 200); // Stok awal antara 50-200
+                    $remaining = $quota;    // Di awal seeder, sisa stok = kuota (karena belum ada transaksi)
+                    $harga = rand(5000, 100000); // Harga barang habis pakai lebih murah
                 }
 
                 Barang::create([
@@ -124,14 +131,16 @@ class DatabaseSeeder extends Seeder
                     'tahun' => Carbon::now()->subYears(rand(1, 5)),
                     'barcode' => 'QR-' . strtoupper(Str::random(12)),
                     'penanggung_jawab_id' => $penanggungJawabs->random()->id,
-                    'harga' => rand(1000000, 20000000),
+                    'harga' => $harga,
                     'gudang_id' => $gudangs->random()->id,
                     'dinas_id' => $dinas->id,
                     'kondisi' => $kondisiPilihan,
                     'jenis_aset' => $jenisAsetPilihan, 
-                    'keterangan' => $keterangan, 
-                    'created_by' => $userOPD->id, // Diisi oleh User OPD dinas ini
-                    'updated_by' => $userOPD->id, // Diisi oleh User OPD dinas ini
+                    'total_quota' => $quota,
+                    'total_use' => 0,
+                    'stock_remaining' => $remaining,
+                    'created_by' => $userOPD->id,
+                    'updated_by' => $userOPD->id,
                     'created_at' => $createdAt,
                     'updated_at' => $updatedAt,
                 ]);
