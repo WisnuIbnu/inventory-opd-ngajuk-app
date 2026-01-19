@@ -132,8 +132,7 @@ class BarangResource extends Resource
                     ->label('Keterangan Mutasi')
                     ->placeholder('Masukkan detail mutasi...')
                     ->visible(fn (Get $get): bool => $get('kondisi') === 'mutasi')
-                    ->required(fn (Get $get): bool => $get('kondisi') === 'mutasi')
-                    ->columnSpanFull(),
+                    ->required(fn (Get $get): bool => $get('kondisi') === 'mutasi'),
 
                 Forms\Components\TextInput::make('harga')
                     ->numeric()

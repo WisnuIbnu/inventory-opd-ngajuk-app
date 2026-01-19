@@ -71,7 +71,6 @@ class LatestTransactionsWidget extends BaseWidget
                     ->infolist([
                         \Filament\Infolists\Components\Section::make('Informasi Penggunaan Barang')
                             ->schema([
-
                                 \Filament\Infolists\Components\Grid::make(2)
                                     ->schema([
                                         \Filament\Infolists\Components\TextEntry::make('barang.merk')
@@ -86,14 +85,16 @@ class LatestTransactionsWidget extends BaseWidget
                                             
                                         \Filament\Infolists\Components\TextEntry::make('penerima')
                                             ->label('Nama Penerima'),
+
+                                        \Filament\Infolists\Components\TextEntry::make('bidang.nama_bidang')
+                                            ->label('Bidang'),
                                             
                                         \Filament\Infolists\Components\TextEntry::make('created_at')
                                             ->label('Waktu Transaksi')
                                             ->dateTime('d F Y H:i'),
 
                                         \Filament\Infolists\Components\TextEntry::make('keperluan')
-                                            ->label('Keperluan')
-                                            ->columnSpanFull(),
+                                            ->label('Keperluan'),
                                     ]),
                             ])
                     ]),

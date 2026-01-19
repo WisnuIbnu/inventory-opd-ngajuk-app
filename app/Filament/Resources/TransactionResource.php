@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\TransactionResource\Pages;
 use App\Models\Barang;
+use App\Models\Bidang;
 use App\Models\Transaction;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -72,6 +73,20 @@ class TransactionResource extends Resource
                             ->live()
                             ->afterStateUpdated(fn (Set $set) => $set('jumlah_pakai', 1)),
 
+                        Forms\Components\Select::make('bidang_id')
+                        ->label('Bidang / Unit Kerja')
+                        ->placeholder('Pilih bidang pengambil...')
+                        ->options(function () {
+                            $dinasId = session('admin_dinas_id') ?? auth()->user()->dinas_id;
+                            
+                            if (!$dinasId) return [];
+                            
+                            return \App\Models\Bidang::where('dinas_id', $dinasId)
+                                ->pluck('nama_bidang', 'id');
+                        })
+                        ->searchable()
+                        ->preload(),
+                        
                         Forms\Components\TextInput::make('jumlah_pakai')
                             ->label(fn (Get $get) => $get('tipe_transaksi') === 'masuk' ? 'Jumlah Masuk' : 'Jumlah Keluar')
                             ->numeric()
@@ -109,8 +124,7 @@ class TransactionResource extends Resource
                         Forms\Components\Textarea::make('keperluan')
                             ->label('Keterangan / Keperluan')
                             ->placeholder(fn (Get $get) => $get('tipe_transaksi') === 'masuk' ? 'Contoh: Pengadaan rutin bulanan...' : 'Contoh: Untuk operasional bidang sekretariat...')
-                            ->required()
-                            ->columnSpanFull(),
+                            ->required(),
                     ])->columns(2),
             ]);
     }
@@ -142,6 +156,9 @@ class TransactionResource extends Resource
                     ->formatStateUsing(fn ($record, $state) => $record->tipe_transaksi === 'masuk' ? "+{$state}" : "-{$state}")
                     ->color(fn ($record) => $record->tipe_transaksi === 'masuk' ? 'success' : 'danger')
                     ->alignCenter(),
+
+                Tables\Columns\TextColumn::make('bidang.nama_bidang')
+                    ->label('Bidang'),
 
                 Tables\Columns\TextColumn::make('penerima')
                     ->label('Pihak Terkait')

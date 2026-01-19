@@ -22,8 +22,7 @@ class TransactionExport implements FromQuery, WithHeadings, WithMapping, ShouldA
 
     public function query()
     {
-        // Gunakan with() agar pengambilan data relasi tidak membebani server (N+1 Query)
-        $query = Transaction::query()->with(['barang.dinas', 'creator']);
+        $query = Transaction::query()->with(['barang.dinas', 'creator', 'bidang']);
 
         // 1. Filter Keamanan (Hanya data milik dinas terkait)
         $role = auth()->user()->role;
@@ -57,12 +56,13 @@ class TransactionExport implements FromQuery, WithHeadings, WithMapping, ShouldA
         return [
             'No',
             'Tanggal & Waktu',
-            'Barcode',
-            'Nama Barang / Merk',
-            'Jumlah Keluar',
-            'Penerima',
+            'Kode Barang',
+            'Nama Barang/Merk',
+            'Jumlah Keluar/Masuk',
+            'Penerima/pegawai',
             'Keperluan',
             'Dinas / OPD',
+            'Bidang',
             'Petugas Input'
         ];
     }
@@ -83,6 +83,7 @@ class TransactionExport implements FromQuery, WithHeadings, WithMapping, ShouldA
             $transaction->penerima,
             $transaction->keperluan,
             $transaction->barang->dinas->nama_opd ?? '-',
+            $transaction->bidang->nama_bidang ?? '-',
             $transaction->creator->name ?? 'Sistem',
         ];
     }

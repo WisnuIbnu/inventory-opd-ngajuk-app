@@ -31,12 +31,10 @@ class JenisBarangResource extends Resource
         $sessionDinasId = session('admin_dinas_id');
 
         if ($role === 'OPD') {
-            // OPD hanya melihat jenis barang milik dinasnya
             return $query->where('dinas_id', $userDinasId);
         }
 
         if ($role === 'Admin' && $sessionDinasId) {
-            // Admin melihat jenis barang berdasarkan dinas yang sedang difilter di session
             return $query->where('dinas_id', $sessionDinasId);
         }
 

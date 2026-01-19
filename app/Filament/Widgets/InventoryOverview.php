@@ -57,7 +57,7 @@ class InventoryOverview extends BaseWidget
                 ->descriptionIcon('heroicon-m-exclamation-triangle')
                 ->color($barangTidakDiGunakan > 0 ? 'danger' : 'gray'),
 
-            Stat::make('Total Gudang', $totalGudang)
+            Stat::make('Total Lokasi Gudang', $totalGudang)
                 ->description('Lokasi Penyimpanan')
                 ->descriptionIcon('heroicon-m-home-modern'),
         ];

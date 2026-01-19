@@ -12,6 +12,7 @@ class Transaction extends Model
 
     protected $fillable = [
         'barang_id',
+        'bidang_id',
         'jumlah_pakai',
         'penerima',
         'keperluan',
@@ -34,6 +35,11 @@ class Transaction extends Model
     public function editor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'updated_by');
+    }
+
+    public function bidang()
+    {
+        return $this->belongsTo(Bidang::class);
     }
 
 }

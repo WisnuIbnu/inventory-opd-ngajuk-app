@@ -37,4 +37,9 @@ class Dinas extends Model
     { 
         return $this->hasMany(Barang::class); 
     }
+
+    public function bidangs(): HasMany
+    {
+        return $this->hasMany(Bidang::class);
+    }
 }
