@@ -133,7 +133,7 @@ class TransactionResource extends Resource
                     ->searchable()
                     ->sortable(),
 
-                    Tables\Columns\TextColumn::make('barang.stock_remaining')
+                Tables\Columns\TextColumn::make('barang.stock_remaining')
                     ->label('Sisa Stok'),
 
                 Tables\Columns\TextColumn::make('jumlah_pakai')

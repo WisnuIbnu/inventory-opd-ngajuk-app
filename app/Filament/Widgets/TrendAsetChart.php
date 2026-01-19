@@ -25,6 +25,7 @@ class TrendAsetChart extends ChartWidget
             $currentYear - 2 => (string) ($currentYear - 2),
             $currentYear - 3 => (string) ($currentYear - 3),
             $currentYear - 4 => (string) ($currentYear - 4),
+            $currentYear - 5 => (string) ($currentYear - 5),
         ];
     }
 
