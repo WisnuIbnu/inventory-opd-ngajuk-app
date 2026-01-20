@@ -9,7 +9,7 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class User extends Authenticatable
+class User extends Authenticatable implements \Filament\Models\Contracts\FilamentUser
 {
     use HasApiTokens, HasFactory, Notifiable;
 
@@ -49,5 +49,10 @@ class User extends Authenticatable
     public function dinas(): BelongsTo
     {
         return $this->belongsTo(Dinas::class);
+    }
+
+    public function canAccessPanel(\Filament\Panel $panel): bool
+    {
+        return true;
     }
 }

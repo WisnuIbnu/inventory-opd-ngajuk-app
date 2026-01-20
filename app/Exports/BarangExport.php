@@ -67,7 +67,7 @@ class BarangExport implements FromQuery, WithHeadings, WithMapping, ShouldAutoSi
     public function headings(): array
     {
         return [
-            'Barcode', 
+            'Kode Barang', 
             'Nama Barang', 
             'Merk', 
             'Kondisi', 

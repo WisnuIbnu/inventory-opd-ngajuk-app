@@ -9,6 +9,10 @@ use Filament\Resources\Pages\CreateRecord;
 class CreateJenisBarang extends CreateRecord
 {
     protected static string $resource = JenisBarangResource::class;
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('index');
+    }
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
