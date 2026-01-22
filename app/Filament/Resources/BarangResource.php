@@ -142,6 +142,7 @@ class BarangResource extends Resource
                 Forms\Components\FileUpload::make('gambar')
                     ->label('Foto Barang')
                     ->image()
+                    ->nullable()
                     ->extraInputAttributes([
                         'capture' => 'environment'
                     ])

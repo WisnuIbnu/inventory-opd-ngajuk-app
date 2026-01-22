@@ -66,6 +66,7 @@ class DaftarBarangResource extends Resource
                     ImageColumn::make('gambar')
                         ->height('200px')
                         ->width('100%')
+                        ->alignCenter()
                         ->visible(fn ($record) => !empty($record->gambar))
                         ->extraImgAttributes(['class' => 'object-cover rounded-t-xl']),
                     

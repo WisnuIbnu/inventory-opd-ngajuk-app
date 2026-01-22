@@ -42,7 +42,15 @@ class Barang extends Model
         'total_use' => 'integer',
         'stock_remaining' => 'integer'
     ];
-
+    
+    protected static function booted()
+    {
+        static::saving(function ($model) {
+            if (!$model->gambar || $model->gambar === "") {
+                $model->gambar = 'barang/default.png';
+            }
+        });
+    }
 
     public function getRouteKeyName(): string
     {
