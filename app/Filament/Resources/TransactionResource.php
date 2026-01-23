@@ -125,6 +125,16 @@ class TransactionResource extends Resource
                             ->label('Keterangan / Keperluan')
                             ->placeholder(fn (Get $get) => $get('tipe_transaksi') === 'masuk' ? 'Contoh: Pengadaan rutin bulanan...' : 'Contoh: Untuk operasional bidang sekretariat...')
                             ->required(),
+
+                        Forms\Components\FileUpload::make('gambar_bukti')
+                            ->label('Foto Transaksi')
+                            ->image()
+                            ->nullable()
+                            ->extraInputAttributes([
+                                'capture' => 'environment'
+                            ])
+                            ->disk('public')
+                            ->directory('transaksi-bukti')
                     ])->columns(2),
             ]);
     }
@@ -163,6 +173,15 @@ class TransactionResource extends Resource
                 Tables\Columns\TextColumn::make('penerima')
                     ->label('Pihak Terkait')
                     ->searchable(),
+
+                Tables\Columns\TextColumn::make('keperluan')
+                    ->label('Keterangan/Penempatan')
+                    ->searchable(),
+
+                Tables\Columns\ImageColumn::make('gambar_bukti')
+                    ->disk('public')
+                    ->label('Foto')
+                    ->square(),
 
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Tanggal')

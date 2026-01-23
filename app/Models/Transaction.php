@@ -15,11 +15,21 @@ class Transaction extends Model
         'bidang_id',
         'jumlah_pakai',
         'penerima',
+        'gambar_bukti',
         'keperluan',
         'tipe_transaksi',
         'created_by',
         'updated_by',
     ];
+
+    protected static function booted()
+    {
+        static::saving(function ($model) {
+            if (!$model->gambar_bukti || $model->gambar_bukti === "") {
+                $model->gambar_bukti = 'transaksi-bukti/transaction-default.png';
+            }
+        });
+    }
 
 
     public function barang(): BelongsTo

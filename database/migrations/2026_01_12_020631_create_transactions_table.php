@@ -18,6 +18,7 @@ return new class extends Migration
             $table->integer('jumlah_pakai');
             $table->string('penerima')->nullable(); 
             $table->text('keperluan')->nullable();
+            $table->string('gambar_bukti')->nullable();
             $table->foreignId('bidang_id')->nullable()->constrained('bidangs')->nullOnDelete();
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();

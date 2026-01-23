@@ -56,6 +56,7 @@ class TransactionExport implements FromQuery, WithHeadings, WithMapping, ShouldA
         return [
             'No',
             'Tanggal & Waktu',
+            'Jenis Transaksi',
             'Kode Barang',
             'Nama Barang/Merk',
             'Jumlah Keluar/Masuk',
@@ -77,6 +78,7 @@ class TransactionExport implements FromQuery, WithHeadings, WithMapping, ShouldA
         return [
             ++$this->rowNumber,
             $transaction->created_at->format('d/m/Y H:i'),
+            ucfirst($transaction->tipe_transaksi),
             $transaction->barang->barcode ?? '-',
             $transaction->barang->merk ?? '-',
             $transaction->jumlah_pakai . ' Unit',
